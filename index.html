@@ -435,7 +435,7 @@ function renderSidebar(){
     d.className='ci'+(c.id===selectedId?' active':'');
     d.onclick=()=>selectComp(c.id);
     const sc=r.dq?'<span class="ci-score dq">DQ</span>':`<span class="ci-score">${r.total.toFixed(1)}</span>`;
-    d.innerHTML=`<div><div class="ci-name">${c.name}</div><div style="font-size:.68rem;color:var(--muted)">Team ${c.team}</div></div>${sc}`;
+    d.innerHTML=`<div><div class="ci-name">${c.name}</div><div style="font-size:.68rem;color:var(--muted)">Team ${String(c.team).replace(/^Tým\s*/i,'')}</div></div>${sc}`;
     list.appendChild(d);
   });
 }
@@ -489,7 +489,7 @@ function renderScoresheet(){
 
   document.getElementById('mainContent').innerHTML=`
     <div class="sh">
-      <div><div class="comp-title">${comp.name}${dqH}</div><div class="comp-sub">Team ${comp.team} · ${fin?'Final':'Semi-Final'}</div></div>
+      <div><div class="comp-title">${comp.name}${dqH}</div><div class="comp-sub">Team ${String(comp.team).replace(/^Tým\s*/i,'')} · ${fin?'Final':'Semi-Final'}</div></div>
       <div style="display:flex;gap:8px;align-items:center">
         <button id="saveBtn" class="btn btn-p${isDirty?' dirty':''}" onclick="manualSave()" style="font-weight:700">Save${isDirty?' •':''}</button>
         <button class="btn btn-danger btn-sm" onclick="removeComp('${comp.id}')">Remove</button>
@@ -619,7 +619,7 @@ function renderRankings(){
     });
     return`<div style="margin-bottom:2.5rem"><h2 style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--muted);letter-spacing:.08em;margin-bottom:1rem">${label}</h2>
     <table class="rtbl"><thead><tr><th>#</th><th>Name</th><th>Team</th><th>Tech T1+T2</th><th>S1</th><th>S2</th><th>S3</th><th>S4</th><th>Penalty</th><th>Total</th></tr></thead><tbody>
-    ${sorted.map((c,i)=>`<tr class="r${i+1}"><td class="rn">${i+1}</td><td><strong>${c.name}</strong>${i<topN?'<span class="rf">FINALIST</span>':''}</td><td style="color:var(--muted)">Team ${c.team}</td><td class="mono">${c.r.tc.toFixed(1)}</td><td class="mono" style="font-size:.82rem">${c.r.ss[0].toFixed(1)}</td><td class="mono" style="font-size:.82rem">${c.r.ss[1].toFixed(1)}</td><td class="mono" style="font-size:.82rem">${c.r.ss[2].toFixed(1)}</td><td class="mono" style="font-size:.82rem">${c.r.ss[3].toFixed(1)}</td><td class="mono" style="color:var(--danger)">${c.r.pen>0?'−'+c.r.pen:'0'}</td><td class="mono ${c.r.dq?'dq':''}">${c.r.dq?'DQ':c.r.total.toFixed(1)}</td></tr>`).join('')}
+    ${sorted.map((c,i)=>`<tr class="r${i+1}"><td class="rn">${i+1}</td><td><strong>${c.name}</strong>${i<topN?'<span class="rf">FINALIST</span>':''}</td><td style="color:var(--muted)">Team ${String(c.team).replace(/^Tým\s*/i,'')}</td><td class="mono">${c.r.tc.toFixed(1)}</td><td class="mono" style="font-size:.82rem">${c.r.ss[0].toFixed(1)}</td><td class="mono" style="font-size:.82rem">${c.r.ss[1].toFixed(1)}</td><td class="mono" style="font-size:.82rem">${c.r.ss[2].toFixed(1)}</td><td class="mono" style="font-size:.82rem">${c.r.ss[3].toFixed(1)}</td><td class="mono" style="color:var(--danger)">${c.r.pen>0?'−'+c.r.pen:'0'}</td><td class="mono ${c.r.dq?'dq':''}">${c.r.dq?'DQ':c.r.total.toFixed(1)}</td></tr>`).join('')}
     </tbody></table></div>`;
   };
   el.innerHTML=rr('Semi-Final',competitors.filter(c=>c.phase==='semi').length?'semi':'semi',6)+rr('Final','final',1);
