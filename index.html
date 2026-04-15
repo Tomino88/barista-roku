@@ -70,9 +70,9 @@
   .ml{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);}
   .mi{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:5px;font-family:'DM Mono',monospace;font-size:.88rem;width:100px;transition:border-color .2s;}
   .mi:focus{outline:none;border-color:var(--accent);}
-  .sections-grid{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:.85rem;}
+  .sections-grid{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:.85rem;}.ss{overflow:visible;}
   .fw{grid-column:1/-1;}
-  .ss{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  .ss{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;}.ss .jc{overflow-x:auto;}.ss .jc.s4{min-width:600px;}
   .sh2{padding:9px 13px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
   .st{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;}
   .sv{font-family:'DM Mono',monospace;font-size:.82rem;color:var(--accent2);}
@@ -83,7 +83,7 @@
   .st2 .sh2{background:rgba(74,122,138,.15);} .st2 .st{color:var(--tech);}
   .sb .sh2{background:rgba(200,168,75,.1);} .sb .st{color:var(--accent);}
   .jc{display:grid;gap:0;}
-  .jc.s4{grid-template-columns:repeat(4,1fr);}
+  .jc.s4{grid-template-columns:repeat(4,minmax(120px,1fr));}
   .jc.t2{grid-template-columns:repeat(2,1fr);}
   .jch{padding:5px 8px;font-size:.62rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);text-align:center;background:var(--surface2);}
   .jch:not(:last-child){border-right:1px solid var(--border);}
@@ -179,10 +179,10 @@
 <div id="loginView">
   <div class="login-box">
     <div class="login-logo">Barista <span>Roku</span></div>
-    <div class="login-sub">Scorekeeping systém</div>
-    <div class="lf"><label class="ll">Email</label><input class="li" type="email" id="loginEmail" placeholder="vas@email.cz" /></div>
+    <div class="login-sub">Scorekeeping System</div>
+    <div class="lf"><label class="ll">Email</label><input class="li" type="email" id="loginEmail" placeholder="your@email.com" /></div>
     <div class="lf"><label class="ll">Heslo</label><input class="li" type="password" id="loginPass" placeholder="••••••••" /></div>
-    <button class="login-btn" onclick="doLogin()">Přihlásit se</button>
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
     <div class="login-error hidden" id="loginError"></div>
   </div>
 </div>
@@ -192,33 +192,33 @@
   <header>
     <div class="logo">Barista <span>Roku</span></div>
     <div class="phase-tabs">
-      <button class="phase-tab active" onclick="setPhase('semi')">Semifinále</button>
-      <button class="phase-tab" onclick="setPhase('final')">Finále</button>
-      <button class="phase-tab" onclick="setPhase('ranking')">Výsledky</button>
+      <button class="phase-tab active" onclick="setPhase('semi')">Semi-Final</button>
+      <button class="phase-tab" onclick="setPhase('final')">Final</button>
+      <button class="phase-tab" onclick="setPhase('ranking')">Results</button>
     </div>
     <div class="header-right">
       <span class="user-badge" id="userBadge"></span>
-      <div class="saving hidden" id="savingIndicator"><div class="spinner"></div>Ukládám...</div>
-      <button class="btn btn-g" onclick="doLogout()">Odhlásit</button>
+      <div class="saving hidden" id="savingIndicator"><div class="spinner"></div>Saving...</div>
+      <button class="btn btn-g" onclick="doLogout()">Sign Out</button>
     </div>
   </header>
 
   <div id="scoreView" class="app">
     <div class="sidebar">
-      <div class="sidebar-section" id="sidebarLabel">Semifinalisté (0/18)</div>
+      <div class="sidebar-section" id="sidebarLabel">Semi-Finalists (0/18)</div>
       <div id="competitorList"></div>
-      <button class="add-btn" onclick="openAddModal()">+ Přidat soutěžícího</button>
+      <button class="add-btn" onclick="openAddModal()">+ Add Competitor</button>
     </div>
     <div class="main" id="mainContent">
       <div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);flex-direction:column;gap:8px">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:2rem;color:var(--border)">VYBERTE SOUTĚŽÍCÍHO</div>
-        <div style="font-size:.82rem">nebo přidejte nového pomocí tlačítka níže</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:2rem;color:var(--border)">SELECT COMPETITOR</div>
+        <div style="font-size:.82rem">or or add a new one below</div>
       </div>
     </div>
   </div>
 
   <div id="rankingView" class="hidden">
-    <div class="rt">Výsledky</div>
+    <div class="rt">Results</div>
     <div id="rankingContent"></div>
   </div>
 </div>
@@ -226,16 +226,16 @@
 <!-- MODAL — Add Competitor -->
 <div class="mo hidden" id="addModal">
   <div class="md">
-    <h3>Přidat soutěžícího</h3>
-    <div class="mdf"><label class="mdl">Jméno</label><input class="mdi" id="modalName" placeholder="Jméno Příjmení" /></div>
-    <div class="mdf"><label class="mdl">Tým judžů</label>
+    <h3>Add Competitor</h3>
+    <div class="mdf"><label class="mdl">Name</label><input class="mdi" id="modalName" placeholder="First Last" /></div>
+    <div class="mdf"><label class="mdl">Judge Team</label>
       <select class="mdi" id="modalTeam">
-        <option value="A">Tým 1</option><option value="B">Tým 2</option><option value="C">Tým 3</option>
+        <option value="1">Team 1</option><option value="2">Team 2</option><option value="3">Team 3</option>
       </select>
     </div>
     <div class="mda">
-      <button class="btn btn-g" onclick="closeModal('addModal')">Zrušit</button>
-      <button class="btn btn-p" onclick="saveCompetitor()">Uložit</button>
+      <button class="btn btn-g" onclick="closeModal('addModal')">Cancel</button>
+      <button class="btn btn-p" onclick="saveCompetitor()">Save</button>
     </div>
   </div>
 </div>
@@ -301,7 +301,7 @@ async function doLogin() {
   const errEl = document.getElementById('loginError');
   errEl.classList.add('hidden');
   const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
-  if (error) { errEl.textContent = 'Nesprávný email nebo heslo.'; errEl.classList.remove('hidden'); return; }
+  if (error) { errEl.textContent = 'Incorrect email or password.'; errEl.classList.remove('hidden'); return; }
   await initApp(data.user);
 }
 
@@ -359,7 +359,7 @@ async function saveScores(compId) {
     { onConflict: 'competitor_id' }
   );
   document.getElementById('savingIndicator').classList.add('hidden');
-  if (error) toast('Chyba při ukládání', 'err');
+  if (error) toast('Save error', 'err');
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -462,7 +462,7 @@ function setPhase(p) {
     document.getElementById('scoreView').classList.remove('hidden');
     document.getElementById('rankingView').classList.add('hidden');
     renderSidebar();
-    document.getElementById('mainContent').innerHTML=`<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);flex-direction:column;gap:8px"><div style="font-family:'Bebas Neue',sans-serif;font-size:2rem;color:var(--border)">VYBERTE SOUTĚŽÍCÍHO</div><div style="font-size:.82rem">nebo přidejte nového</div></div>`;
+    document.getElementById('mainContent').innerHTML=`<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);flex-direction:column;gap:8px"><div style="font-family:'Bebas Neue',sans-serif;font-size:2rem;color:var(--border)">SELECT COMPETITOR</div><div style="font-size:.82rem">or add a new one</div></div>`;
   }
 }
 
@@ -474,7 +474,7 @@ function renderSidebar() {
   const lbl=document.getElementById('sidebarLabel');
   const comps=competitors.filter(c=>c.phase===phase);
   const max=phase==='semi'?18:6;
-  lbl.textContent=`${phase==='semi'?'Semifinalisté':'Finalisté'} (${comps.length}/${max})`;
+  lbl.textContent=`${phase==='semi'?'Semi-Finalists':'Finalists'} (${comps.length}/${max})`;
   list.innerHTML='';
   comps.forEach(c=>{
     const r=calcTotal(c);
@@ -482,7 +482,7 @@ function renderSidebar() {
     d.className='ci'+(c.id===selectedId?' active':'')+(r.dq?' dq':'');
     d.onclick=()=>selectComp(c.id);
     const sc=r.dq?'<span class="ci-score dq">DQ</span>':r.total!==null?`<span class="ci-score">${r.total.toFixed(1)}</span>`:'<span class="ci-score" style="color:var(--muted)">—</span>';
-    d.innerHTML=`<div><div class="ci-name">${c.name}</div><div style="font-size:.68rem;color:var(--muted)">Tým ${c.team}</div></div>${sc}`;
+    d.innerHTML=`<div><div class="ci-name">${c.name}</div><div style="font-size:.68rem;color:var(--muted)">Team ${c.team}</div></div>${sc}`;
     list.appendChild(d);
   });
 }
@@ -504,7 +504,7 @@ function renderScoresheet() {
   const r=calcTotal(comp);
   const pen=timePen(sd.time),dq=isDQ(sd.time);
   const dqH=dq?`<span class="dq-badge">DISKVALIFIKACE</span>`:'';
-  const JL=['Sudí 1','Sudí 2','Sudí 3','Sudí 4'];
+  const JL=['Judge 1','Judge 2','Judge 3','Judge 4'];
 
   const nc=(lbl,key,mn,mx,mult,ji,ml2)=>{
     const v=ji!==null?sd.sensory[ji][key]:sd[key];
@@ -515,52 +515,52 @@ function renderScoresheet() {
   };
   const yc=(lbl,key,ji)=>{
     const v=ji!==null?sd.sensory[ji][key]:sd[key];
-    return`<div class="sc"><div class="slbl">${lbl}</div><div class="yn"><button class="yb ${v===1?'ya':''}" onclick="upd('${comp.id}','${key}',1,${ji!==null?ji:'null'})">ANO</button><button class="yb ${v===0?'na':''}" onclick="upd('${comp.id}','${key}',0,${ji!==null?ji:'null'})">NE</button></div></div>`;
+    return`<div class="sc"><div class="slbl">${lbl}</div><div class="yn"><button class="yb ${v===1?'ya':''}" onclick="upd('${comp.id}','${key}',1,${ji!==null?ji:'null'})">YES</button><button class="yb ${v===0?'na':''}" onclick="upd('${comp.id}','${key}',0,${ji!==null?ji:'null'})">NO</button></div></div>`;
   };
 
   const SS=(title,cls,maxP,colPart,rows)=>{
     const pts=[0,1,2,3].map(j=>{const p=sensoryParts(sd.sensory[j]);const v=p[colPart];return v!==null?v.toFixed(1):'—';});
-    return`<div class="ss ${cls}"><div class="sh2"><span class="st">${title}</span><span class="sv">${pts.join(' / ')}<span class="smx"> /${maxP}</span></span></div><div class="jc s4">${JL.map(l=>`<div class="jch">${l}</div>`).join('')}${rows.map(r=>[0,1,2,3].map(j=>r.yn?yc(r.l,r.k,j):nc(r.l,r.k,0,r.mx||6,r.mult,j,r.ml)).join('')).join('')}</div></div>`;
+    return`<div class="ss ${cls}"><div class="sh2"><span class="st">${title}</span><span class="sv">${pts.join(' / ')}<span class="smx"> /${maxP}</span></span></div><div style="overflow-x:auto"><div class="jc s4" style="min-width:520px">${JL.map(l=>`<div class="jch">${l}</div>`).join('')}${rows.map(r=>[0,1,2,3].map(j=>r.yn?yc(r.l,r.k,j):nc(r.l,r.k,0,r.mx||6,r.mult,j,r.ml)).join('')).join('')}</div></div></div>`;
   };
 
   const TS=(title,maxP,rows)=>{
     if(fin)return'';
-    return`<div class="ss st2"><div class="sh2"><span class="st">${title}</span><span class="sv">T1 / T2<span class="smx"> /${maxP}</span></span></div><div class="jc t2"><div class="jch">Tech Sudí 1</div><div class="jch">Tech Sudí 2 (=T1)</div>${rows.map(r=>{const v=sd[r.k];const mir=r.yn?`<div class="sc"><div class="slbl">${r.l}</div><div style="color:var(--muted);font-size:.78rem;text-align:center;padding:3px 0">${v===1?'✓ ANO':v===0?'✗ NE':'—'}</div></div>`:`<div class="sc"><div class="slbl">${r.l}</div><div style="color:var(--muted);font-family:'DM Mono',monospace;font-size:.88rem;text-align:center;padding:3px 0">${v!==null?v:'—'}</div></div>`;return(r.yn?yc(r.l,r.k,null):nc(r.l,r.k,0,r.mx||6,null,null))+mir;}).join('')}</div></div>`;
+    return`<div class="ss st2"><div class="sh2"><span class="st">${title}</span><span class="sv">T1 / T2<span class="smx"> /${maxP}</span></span></div><div class="jc t2"><div class="jch">Tech Judge 1</div><div class="jch">Tech Judge 2 (=T1)</div>${rows.map(r=>{const v=sd[r.k];const mir=r.yn?`<div class="sc"><div class="slbl">${r.l}</div><div style="color:var(--muted);font-size:.78rem;text-align:center;padding:3px 0">${v===1?'✓ YES':v===0?'✗ NO':'—'}</div></div>`:`<div class="sc"><div class="slbl">${r.l}</div><div style="color:var(--muted);font-family:'DM Mono',monospace;font-size:.88rem;text-align:center;padding:3px 0">${v!==null?v:'—'}</div></div>`;return(r.yn?yc(r.l,r.k,null):nc(r.l,r.k,0,r.mx||6,null,null))+mir;}).join('')}</div></div>`;
   };
 
   // HJ panel
   const tr2=techParts(sd);
   const ss2=sd.sensory.map(sj=>sensoryParts(sj).tot);
   const hjT=(()=>{const t=tr2.tot;const aS=ss2.every(x=>x!==null);if(!fin&&t!==null&&aS)return(t*2)+ss2.reduce((a,b)=>a+b,0)-pen;if(fin&&aS)return ss2.reduce((a,b)=>a+b,0)-pen;return null;})();
-  const HJ=`<div class="hj"><div class="hjh"><span class="hjt">Head Judge — Souhrnný scoresheet</span><span class="hjn">Skóre HJ se nezapočítává. Slouží pro zápis na HJ scoresheet.</span></div><div class="hjg">${!fin?`<div class="hjc"><div class="hjcl">Tech 1 /71</div><div class="hjcv">${tr2.tot!==null?tr2.tot.toFixed(1):'—'}</div></div><div class="hjc"><div class="hjcl">Tech 2 (=T1) /71</div><div class="hjcv">${tr2.tot!==null?tr2.tot.toFixed(1):'—'}</div></div>`:`<div class="hjc"><div class="hjcl">Tech</div><div class="hjcv" style="color:var(--muted)">N/A</div></div><div class="hjc"></div>`}${[0,1,2,3].map(j=>`<div class="hjc"><div class="hjcl">Sensory ${j+1} /178</div><div class="hjcv">${ss2[j]!==null?ss2[j].toFixed(1):'—'}</div></div>`).join('')}</div><div class="hjf"><div><div class="hjfm">${!fin?'T1 + T2 + S1 + S2 + S3 + S4 − penalizace':'S1 + S2 + S3 + S4 − penalizace'}</div>${pen>0?`<div style="font-size:.72rem;color:var(--danger);margin-top:3px">Penalizace: −${pen} bodů${dq?' | DISKVALIFIKACE':''}</div>`:''}</div><div style="text-align:right"><div class="hjfs">${dq?'DQ':hjT!==null?hjT.toFixed(1):'—'}</div><div style="font-size:.68rem;color:var(--muted)">TOTAL SCORE</div></div></div></div>`;
+  const HJ=`<div class="hj"><div class="hjh"><span class="hjt">Head Judge — Summary Scoresheet</span><span class="hjn">HJ scores do not count. For reference when filling in the HJ scoresheet.</span></div><div class="hjg">${!fin?`<div class="hjc"><div class="hjcl">Tech 1 /71</div><div class="hjcv">${tr2.tot!==null?tr2.tot.toFixed(1):'—'}</div></div><div class="hjc"><div class="hjcl">Tech 2 (=T1) /71</div><div class="hjcv">${tr2.tot!==null?tr2.tot.toFixed(1):'—'}</div></div>`:`<div class="hjc"><div class="hjcl">Tech</div><div class="hjcv" style="color:var(--muted)">N/A</div></div><div class="hjc"></div>`}${[0,1,2,3].map(j=>`<div class="hjc"><div class="hjcl">Sensory ${j+1} /178</div><div class="hjcv">${ss2[j]!==null?ss2[j].toFixed(1):'—'}</div></div>`).join('')}</div><div class="hjf"><div><div class="hjfm">${!fin?'T1 + T2 + S1 + S2 + S3 + S4 − time penalty':'S1 + S2 + S3 + S4 − time penalty'}</div>${pen>0?`<div style="font-size:.72rem;color:var(--danger);margin-top:3px">Time Penalty: −${pen} pts${dq?' | DISKVALIFIKACE':''}</div>`:''}</div><div style="text-align:right"><div class="hjfs">${dq?'DQ':hjT!==null?hjT.toFixed(1):'—'}</div><div style="font-size:.68rem;color:var(--muted)">TOTAL SCORE</div></div></div></div>`;
 
   // SCANS panel
   const scans=scansCache[comp.id]||[];
-  const SCAN=`<div class="scans-panel"><div class="scans-head"><span class="scans-title">📎 Nascanované scoresheety</span></div>
+  const SCAN=`<div class="scans-panel"><div class="scans-head"><span class="scans-title">📎 Scanned Scoresheets</span></div>
     <div class="upload-label-select">
       <select class="upload-select" id="scanLabelSelect">
-        <option value="Tech Sudí 1">Tech Sudí 1</option>
-        <option value="Tech Sudí 2">Tech Sudí 2</option>
-        <option value="Sensory Sudí 1">Sensory Sudí 1</option>
-        <option value="Sensory Sudí 2">Sensory Sudí 2</option>
-        <option value="Sensory Sudí 3">Sensory Sudí 3</option>
-        <option value="Sensory Sudí 4">Sensory Sudí 4</option>
+        <option value="Tech Judge 1">Tech Judge 1</option>
+        <option value="Tech Judge 2">Tech Judge 2</option>
+        <option value="Sensory Judge 1">Sensory Judge 1</option>
+        <option value="Sensory Judge 2">Sensory Judge 2</option>
+        <option value="Sensory Judge 3">Sensory Judge 3</option>
+        <option value="Sensory Judge 4">Sensory Judge 4</option>
         <option value="Head Judge">Head Judge</option>
       </select>
       <label class="btn btn-p btn-sm" style="cursor:pointer">
-        Nahrát scan
+        Upload Scan
         <input type="file" accept="image/*,.pdf" style="display:none" onchange="uploadScan('${comp.id}',this)"/>
       </label>
     </div>
     <div class="scans-list" id="scansList">
-      ${scans.length===0?`<div style="color:var(--muted);font-size:.82rem;padding:.25rem 0">Žádné scany zatím nenahrány.</div>`:''}
+      ${scans.length===0?`<div style="color:var(--muted);font-size:.82rem;padding:.25rem 0">No scans uploaded yet.</div>`:''}
       ${scans.map(sc=>`<div class="scan-item">
         <div class="scan-info">
           <div class="scan-label">${sc.judge_label}</div>
           <div class="scan-meta">${sc.file_name} · ${new Date(sc.uploaded_at).toLocaleString('cs')}</div>
         </div>
         <div class="scan-actions">
-          <button class="btn btn-g btn-sm" onclick="downloadScan('${sc.file_path}','${sc.file_name}')">Stáhnout</button>
+          <button class="btn btn-g btn-sm" onclick="downloadScan('${sc.file_path}','${sc.file_name}')">Download</button>
           <button class="btn btn-danger btn-sm" onclick="deleteScan('${sc.id}','${sc.file_path}','${comp.id}')">✕</button>
         </div>
       </div>`).join('')}
@@ -569,42 +569,42 @@ function renderScoresheet() {
 
   document.getElementById('mainContent').innerHTML=`
     <div class="sh">
-      <div><div class="comp-title">${comp.name}${dqH}</div><div class="comp-sub">Tým ${comp.team} · ${fin?'Finále':'Semifinále'}</div></div>
-      <button class="btn btn-danger btn-sm" onclick="removeComp('${comp.id}')">Odstranit</button>
+      <div><div class="comp-title">${comp.name}${dqH}</div><div class="comp-sub">Team ${comp.team} · ${fin?'Final':'Semi-Final'}</div></div>
+      <button class="btn btn-danger btn-sm" onclick="removeComp('${comp.id}')">Remove</button>
     </div>
     <div class="meta-row">
-      <div class="mf"><div class="ml">Čas (mm:ss)</div>
+      <div class="mf"><div class="ml">Time (mm:ss)</div>
         <input class="mi" type="text" placeholder="14:35" value="${sd.time||''}"
           onchange="upd('${comp.id}','time',this.value,null)" pattern="\\d{1,2}:\\d{2}"/>
       </div>
-      <div class="mf"><div class="ml">Penalizace</div>
+      <div class="mf"><div class="ml">Time Penalty</div>
         <div style="padding:6px 0;font-family:'DM Mono',monospace;font-size:.95rem;color:${pen>0?'var(--danger)':'var(--ok)'}">
-          ${pen>0?`−${pen} bodů`:dq?'<span style="color:var(--danger)">DQ</span>':'0 bodů'}
+          ${pen>0?`−${pen} pts`:dq?'<span style="color:var(--danger)">DQ</span>':'0 pts'}
         </div>
       </div>
     </div>
     <div class="sections-grid">
-      ${TS('TECH I — Start-Up',6,[{l:'Čistota / clean cloths',k:'t_clean_start',mx:6}])}
-      ${TS('TECH II — Espresso',17,[{l:'Propláchnutí group head',k:'t_esp_flush',yn:true},{l:'Suchý/čistý košík',k:'t_esp_dry',yn:true},{l:'Odpad při dávkování',k:'t_esp_waste',mx:6},{l:'Dávkování a tampování',k:'t_esp_dose',mx:6},{l:'Čistota portafiltru',k:'t_esp_clean_pf',yn:true},{l:'Okamžitý nástřik',k:'t_esp_brew',yn:true},{l:'Čas extrakce (±3s)',k:'t_esp_time',yn:true}])}
-      ${TS('TECH III — Mléčný nápoj',22,[{l:'Propláchnutí group head',k:'t_milk_flush',yn:true},{l:'Suchý/čistý košík',k:'t_milk_dry',yn:true},{l:'Odpad při dávkování',k:'t_milk_waste_g',mx:6},{l:'Dávkování a tampování',k:'t_milk_dose',mx:6},{l:'Čistota portafiltru',k:'t_milk_clean_pf',yn:true},{l:'Okamžitý nástřik',k:'t_milk_brew',yn:true},{l:'Čas extrakce (±3s)',k:'t_milk_time',yn:true},{l:'Prázdný čistý džbánek',k:'t_milk_empty',yn:true},{l:'Profouknutí trysky před',k:'t_milk_purge_before',yn:true},{l:'Čistota trysky po',k:'t_milk_clean_wand',yn:true},{l:'Profouknutí trysky po',k:'t_milk_purge_after',yn:true},{l:'Přijatelný odpad mléka',k:'t_milk_waste_ml',yn:true}])}
-      ${TS('TECH IV — Signature',17,[{l:'Propláchnutí group head',k:'t_sig_flush',yn:true},{l:'Suchý/čistý košík',k:'t_sig_dry',yn:true},{l:'Odpad při dávkování',k:'t_sig_waste',mx:6},{l:'Dávkování a tampování',k:'t_sig_dose',mx:6},{l:'Čistota portafiltru',k:'t_sig_clean_pf',yn:true},{l:'Okamžitý nástřik',k:'t_sig_brew',yn:true},{l:'Čas extrakce (±3s)',k:'t_sig_time',yn:true}])}
-      ${TS('TECH V — Station Management',9,[{l:'Station management / čistota',k:'t_station',mx:6},{l:'Čistota hubic PF',k:'t_clean_pf_spouts',yn:true},{l:'Celková hygiena',k:'t_hygiene',yn:true},{l:'Správné použití utěrek',k:'t_cloths',yn:true}])}
-      ${SS('SENSORY I — Espresso','se',49,'p1',[{l:'Crema',k:'s_crema',yn:true},{l:'Přesnost chuťových popisků',k:'s_esp_taste_desc',mult:4,mx:3,ml:'12'},{l:'Přesnost taktilních popisků',k:'s_esp_tactile_desc',mult:2,mx:3,ml:'6'},{l:'Chuťový zážitek',k:'s_esp_taste_exp',mult:3,mx:6,ml:'18'},{l:'Taktilní zážitek',k:'s_esp_tactile_exp',mult:2,mx:6,ml:'12'}])}
-      ${SS('SENSORY II — Mléčný nápoj','sm2',33,'p2',[{l:'Vizuální dojem',k:'s_milk_visual',mx:3,ml:'3'},{l:'Přesnost chuťových popisků',k:'s_milk_taste_desc',mult:4,mx:3,ml:'12'},{l:'Chuťový zážitek',k:'s_milk_taste_exp',mult:3,mx:6,ml:'18'}])}
-      ${SS('SENSORY III — Signature beverage','ss2',42,'p3',[{l:'Přesnost chuťových popisků',k:'s_sig_acc_taste',mult:4,mx:3,ml:'12'},{l:'Popis, uvedení, příprava',k:'s_sig_well_explained',mult:2,mx:6,ml:'12'},{l:'Chuťový zážitek',k:'s_sig_taste_exp',mult:3,mx:6,ml:'18'}])}
-      ${SS('SENSORY IV — Barista hodnocení','sb',30,'p4',[{l:'Pozornost k detailům',k:'s_attention',mult:2,mx:3,ml:'6'},{l:'Prezentace',k:'s_presentation',mult:3,mx:6,ml:'18'},{l:'Znalost kávy / vybavení',k:'s_coffee_knowledge',mult:2,mx:3,ml:'6'}])}
-      ${SS('SENSORY V — Celkový dojem','sb fw',24,'p5',[{l:'Celkový dojem',k:'s_total_impression',mult:4,mx:6,ml:'24'}])}
+      ${TS('TECH I — Station at Start-Up',6,[{l:'Clean Working Area / Clean Cloths',k:'t_clean_start',mx:6}])}
+      ${TS('TECH II — Espresso',17,[{l:'Flushes the Group Head',k:'t_esp_flush',yn:true},{l:'Dry/Clean Filter Basket',k:'t_esp_dry',yn:true},{l:'Acceptable Spill/Waste',k:'t_esp_waste',mx:6},{l:'Consistent Dosing & Tamping',k:'t_esp_dose',mx:6},{l:'Cleans Portafilter (before insert)',k:'t_esp_clean_pf',yn:true},{l:'Insert and Immediate Brew',k:'t_esp_brew',yn:true},{l:'Extraction Time (±3s)',k:'t_esp_time',yn:true}])}
+      ${TS('TECH III — Milk Beverage',22,[{l:'Flushes the Group Head',k:'t_milk_flush',yn:true},{l:'Dry/Clean Filter Basket',k:'t_milk_dry',yn:true},{l:'Acceptable Spill/Waste',k:'t_milk_waste_g',mx:6},{l:'Consistent Dosing & Tamping',k:'t_milk_dose',mx:6},{l:'Cleans Portafilter (before insert)',k:'t_milk_clean_pf',yn:true},{l:'Insert and Immediate Brew',k:'t_milk_brew',yn:true},{l:'Extraction Time (±3s)',k:'t_milk_time',yn:true},{l:'Empty/Clean Pitcher at Start',k:'t_milk_empty',yn:true},{l:'Purges Steam Wand Before',k:'t_milk_purge_before',yn:true},{l:'Cleans Steam Wand After',k:'t_milk_clean_wand',yn:true},{l:'Purges Steam Wand After',k:'t_milk_purge_after',yn:true},{l:'Acceptable Milk Waste',k:'t_milk_waste_ml',yn:true}])}
+      ${TS('TECH IV — Signature Beverage',17,[{l:'Flushes the Group Head',k:'t_sig_flush',yn:true},{l:'Dry/Clean Filter Basket',k:'t_sig_dry',yn:true},{l:'Acceptable Spill/Waste',k:'t_sig_waste',mx:6},{l:'Consistent Dosing & Tamping',k:'t_sig_dose',mx:6},{l:'Cleans Portafilter (before insert)',k:'t_sig_clean_pf',yn:true},{l:'Insert and Immediate Brew',k:'t_sig_brew',yn:true},{l:'Extraction Time (±3s)',k:'t_sig_time',yn:true}])}
+      ${TS('TECH V — Station Management',9,[{l:'Station Management / Clean Area at End',k:'t_station',mx:6},{l:'Clean Portafilter Spouts',k:'t_clean_pf_spouts',yn:true},{l:'General Hygiene',k:'t_hygiene',yn:true},{l:'Proper Usage of Cloths',k:'t_cloths',yn:true}])}
+      ${SS('SENSORY I — Espresso','se',49,'p1',[{l:'Crema',k:'s_crema',yn:true},{l:'Accuracy of Taste Descriptors',k:'s_esp_taste_desc',mult:4,mx:3,ml:'12'},{l:'Accuracy of Tactile Descriptors',k:'s_esp_tactile_desc',mult:2,mx:3,ml:'6'},{l:'Taste Experience',k:'s_esp_taste_exp',mult:3,mx:6,ml:'18'},{l:'Tactile Experience',k:'s_esp_tactile_exp',mult:2,mx:6,ml:'12'}])}
+      ${SS('SENSORY II — Milk Beverage','sm2',33,'p2',[{l:'Visual Appeal',k:'s_milk_visual',mx:3,ml:'3'},{l:'Accuracy of Taste Descriptors',k:'s_milk_taste_desc',mult:4,mx:3,ml:'12'},{l:'Taste Experience',k:'s_milk_taste_exp',mult:3,mx:6,ml:'18'}])}
+      ${SS('SENSORY III — Signature Beverage','ss2',42,'p3',[{l:'Accuracy of Taste Descriptors',k:'s_sig_acc_taste',mult:4,mx:3,ml:'12'},{l:'Well Explained, Introduced & Prepared',k:'s_sig_well_explained',mult:2,mx:6,ml:'12'},{l:'Taste Experience',k:'s_sig_taste_exp',mult:3,mx:6,ml:'18'}])}
+      ${SS('SENSORY IV — Barista Evaluation','sb',30,'p4',[{l:'Attention to Details',k:'s_attention',mult:2,mx:3,ml:'6'},{l:'Presentation',k:'s_presentation',mult:3,mx:6,ml:'18'},{l:'Coffee Knowledge/Use of Equipment',k:'s_coffee_knowledge',mult:2,mx:3,ml:'6'}])}
+      ${SS('SENSORY V — Total Impression','sb fw',24,'p5',[{l:'Total Impression',k:'s_total_impression',mult:4,mx:6,ml:'24'}])}
     </div>
     <div class="total-bar">
       <div style="display:flex;gap:1.25rem;flex-wrap:wrap">
         ${!fin&&r.tc!==null?`<div class="bd"><div class="bdl">Tech T1+T2</div><div class="bdv">${r.tc.toFixed(1)}<span style="color:var(--muted);font-size:.68rem"> /142</span></div></div>`:''}
-        <div class="bd"><div class="bdl">Sensory celkem</div><div class="bdv">${r.st!==null?r.st.toFixed(1):'—'}<span style="color:var(--muted);font-size:.68rem"> /712</span></div></div>
+        <div class="bd"><div class="bdl">Sensory Total</div><div class="bdv">${r.st!==null?r.st.toFixed(1):'—'}<span style="color:var(--muted);font-size:.68rem"> /712</span></div></div>
         ${[0,1,2,3].map(j=>`<div class="bd"><div class="bdl">S${j+1}</div><div class="bdv" style="font-size:.82rem">${r.ss[j]!==null?r.ss[j].toFixed(1):'—'}</div></div>`).join('')}
-        ${r.pen>0?`<div class="bd"><div class="bdl">Penalizace</div><div class="bdv" style="color:var(--danger)">−${r.pen}</div></div>`:''}
+        ${r.pen>0?`<div class="bd"><div class="bdl">Time Penalty</div><div class="bdv" style="color:var(--danger)">−${r.pen}</div></div>`:''}
       </div>
       <div style="text-align:right">
         <div class="tbig">${r.dq?'DQ':r.total!==null?r.total.toFixed(1):'—'}</div>
-        <div style="font-size:.68rem;color:var(--muted)">CELKOVÉ SKÓRE</div>
+        <div style="font-size:.68rem;color:var(--muted)">TOTAL SCORE</div>
       </div>
     </div>
     ${HJ}
@@ -638,36 +638,36 @@ async function uploadScan(compId, input) {
   const label=document.getElementById('scanLabelSelect').value;
   const ext=file.name.split('.').pop();
   const path=`${compId}/${Date.now()}.${ext}`;
-  toast('Nahrávám...','');
+  toast('Uploading...','');
   const{error:upErr}=await sb.storage.from('scans').upload(path,file);
-  if(upErr){toast('Chyba při nahrávání','err');return;}
+  if(upErr){toast('Upload error','err');return;}
   const{error:dbErr}=await sb.from('scans').insert({
     competitor_id:compId, judge_label:label,
     file_path:path, file_name:file.name, uploaded_by:currentUser.id
   });
-  if(dbErr){toast('Chyba při ukládání záznamu','err');return;}
+  if(dbErr){toast('Error saving record','err');return;}
   // reload scans for this comp
   const{data}=await sb.from('scans').select('*').eq('competitor_id',compId).order('uploaded_at');
   scansCache[compId]=data||[];
   input.value='';
-  toast('Scan nahrán ✓','ok');
+  toast('Scan uploaded ✓','ok');
   renderScoresheet();
 }
 
 async function downloadScan(filePath, fileName) {
   const{data,error}=await sb.storage.from('scans').download(filePath);
-  if(error){toast('Chyba při stahování','err');return;}
+  if(error){toast('Download error','err');return;}
   const url=URL.createObjectURL(data);
   const a=document.createElement('a');a.href=url;a.download=fileName;a.click();
   setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
 async function deleteScan(scanId, filePath, compId) {
-  if(!confirm('Odstranit scan?'))return;
+  if(!confirm('Remove scan?'))return;
   await sb.storage.from('scans').remove([filePath]);
   await sb.from('scans').delete().eq('id',scanId);
   scansCache[compId]=(scansCache[compId]||[]).filter(s=>s.id!==scanId);
-  toast('Scan odstraněn','ok');
+  toast('Scan deleted','ok');
   renderScoresheet();
 }
 
@@ -687,17 +687,17 @@ async function saveCompetitor() {
   const team=document.getElementById('modalTeam').value;
   if(!name)return;
   const{data,error}=await sb.from('competitors').insert({name,team,phase}).select().single();
-  if(error){toast('Chyba při ukládání','err');return;}
+  if(error){toast('Save error','err');return;}
   competitors.push(data);
   scoresCache[data.id]=emptyScoreData();
   await saveScores(data.id);
   closeModal('addModal');
   renderSidebar();
-  toast(`${name} přidán/a ✓`,'ok');
+  toast(`${name} added ✓`,'ok');
 }
 
 async function removeComp(id) {
-  if(!confirm('Odstranit soutěžícího a všechna jeho data?'))return;
+  if(!confirm('Remove soutěžícího a všechna jeho data?'))return;
   await sb.from('competitors').delete().eq('id',id);
   competitors=competitors.filter(c=>c.id!==id);
   delete scoresCache[id];
@@ -705,7 +705,7 @@ async function removeComp(id) {
   selectedId=null;
   renderSidebar();
   document.getElementById('mainContent').innerHTML=`<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted)">Vyberte soutěžícího</div>`;
-  toast('Soutěžící odstraněn','ok');
+  toast('Competitor removed','ok');
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -721,11 +721,11 @@ function renderRankings() {
       return(b.r.total||0)-(a.r.total||0);
     });
     return`<div style="margin-bottom:2.5rem"><h2 style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--muted);letter-spacing:.08em;margin-bottom:1rem">${label}</h2>
-    <table class="rtbl"><thead><tr><th>#</th><th>Jméno</th><th>Tým</th><th>Tech</th><th>S1</th><th>S2</th><th>S3</th><th>S4</th><th>Pen.</th><th>Celkem</th></tr></thead><tbody>
-    ${sorted.map((c,i)=>`<tr class="r${i+1}"><td class="rn">${i+1}</td><td><strong>${c.name}</strong>${i<topN?'<span class="rf">POSTUP</span>':''}</td><td style="color:var(--muted)">Tým ${c.team}</td><td class="mono">${c.r.tech!==null?c.r.tech.toFixed(1):'—'}</td><td class="mono" style="font-size:.82rem">${c.r.ss[0]!==null?c.r.ss[0].toFixed(1):'—'}</td><td class="mono" style="font-size:.82rem">${c.r.ss[1]!==null?c.r.ss[1].toFixed(1):'—'}</td><td class="mono" style="font-size:.82rem">${c.r.ss[2]!==null?c.r.ss[2].toFixed(1):'—'}</td><td class="mono" style="font-size:.82rem">${c.r.ss[3]!==null?c.r.ss[3].toFixed(1):'—'}</td><td class="mono" style="color:var(--danger)">${c.r.pen>0?'−'+c.r.pen:'0'}</td><td class="mono ${c.r.dq?'dq':''}">${c.r.dq?'DQ':c.r.total!==null?c.r.total.toFixed(1):'—'}</td></tr>`).join('')}
+    <table class="rtbl"><thead><tr><th>#</th><th>Name</th><th>Team</th><th>Tech</th><th>S1</th><th>S2</th><th>S3</th><th>S4</th><th>Pen.</th><th>Total</th></tr></thead><tbody>
+    ${sorted.map((c,i)=>`<tr class="r${i+1}"><td class="rn">${i+1}</td><td><strong>${c.name}</strong>${i<topN?'<span class="rf">POSTUP</span>':''}</td><td style="color:var(--muted)">Team ${c.team}</td><td class="mono">${c.r.tech!==null?c.r.tech.toFixed(1):'—'}</td><td class="mono" style="font-size:.82rem">${c.r.ss[0]!==null?c.r.ss[0].toFixed(1):'—'}</td><td class="mono" style="font-size:.82rem">${c.r.ss[1]!==null?c.r.ss[1].toFixed(1):'—'}</td><td class="mono" style="font-size:.82rem">${c.r.ss[2]!==null?c.r.ss[2].toFixed(1):'—'}</td><td class="mono" style="font-size:.82rem">${c.r.ss[3]!==null?c.r.ss[3].toFixed(1):'—'}</td><td class="mono" style="color:var(--danger)">${c.r.pen>0?'−'+c.r.pen:'0'}</td><td class="mono ${c.r.dq?'dq':''}">${c.r.dq?'DQ':c.r.total!==null?c.r.total.toFixed(1):'—'}</td></tr>`).join('')}
     </tbody></table></div>`;
   };
-  el.innerHTML=rr('Semifinále','semi',6)+rr('Finále','final',1);
+  el.innerHTML=rr('Semi-Final','semi',6)+rr('Final','final',1);
 }
 
 // ══════════════════════════════════════════════════════════════
