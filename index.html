@@ -459,7 +459,8 @@ function renderScoresheet(){
   };
   const yc=(lbl,key,ji)=>{
     const v=ji!==null?sd.sensory[ji][key]:sd[key];
-    return`<div class="sc"><div class="slbl">${lbl}</div><div class="yn"><button class="yb ${v===1?'ya':''}" onclick="upd('${comp.id}','${key}',1,${ji!==null?ji:'null'})">YES</button><button class="yb ${v===0?'na':''}" onclick="upd('${comp.id}','${key}',0,${ji!==null?ji:'null'})">NO</button></div></div>`;
+    const ptsH=v!==null?`<span style="font-size:.6rem;font-family:'DM Mono',monospace;color:${v===1?'var(--ok)':'var(--muted)'};margin-left:5px;font-weight:700">${v===1?'+1 pt':'0 pt'}</span>`:'';
+    return`<div class="sc"><div class="slbl">${lbl}${ptsH}</div><div class="yn"><button class="yb ${v===1?'ya':''}" onclick="upd('${comp.id}','${key}',1,${ji!==null?ji:'null'})">YES</button><button class="yb ${v===0?'na':''}" onclick="upd('${comp.id}','${key}',0,${ji!==null?ji:'null'})">NO</button></div></div>`;
   };
 
   // Sensory section — shows per-judge sub-total for that part
@@ -606,8 +607,8 @@ function renderRankings(){
       return b.r.total-a.r.total;
     });
     return`<div style="margin-bottom:2.5rem"><h2 style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--muted);letter-spacing:.08em;margin-bottom:1rem">${label}</h2>
-    <table class="rtbl"><thead><tr><th>#</th><th>Name</th><th>Team</th><th>Tech</th><th>S1</th><th>S2</th><th>S3</th><th>S4</th><th>Penalty</th><th>Total</th></tr></thead><tbody>
-    ${sorted.map((c,i)=>`<tr class="r${i+1}"><td class="rn">${i+1}</td><td><strong>${c.name}</strong>${i<topN?'<span class="rf">FINALIST</span>':''}</td><td style="color:var(--muted)">Team ${c.team}</td><td class="mono">${c.r.tech.toFixed(1)}</td><td class="mono" style="font-size:.82rem">${c.r.ss[0].toFixed(1)}</td><td class="mono" style="font-size:.82rem">${c.r.ss[1].toFixed(1)}</td><td class="mono" style="font-size:.82rem">${c.r.ss[2].toFixed(1)}</td><td class="mono" style="font-size:.82rem">${c.r.ss[3].toFixed(1)}</td><td class="mono" style="color:var(--danger)">${c.r.pen>0?'−'+c.r.pen:'0'}</td><td class="mono ${c.r.dq?'dq':''}">${c.r.dq?'DQ':c.r.total.toFixed(1)}</td></tr>`).join('')}
+    <table class="rtbl"><thead><tr><th>#</th><th>Name</th><th>Team</th><th>Tech T1+T2</th><th>S1</th><th>S2</th><th>S3</th><th>S4</th><th>Penalty</th><th>Total</th></tr></thead><tbody>
+    ${sorted.map((c,i)=>`<tr class="r${i+1}"><td class="rn">${i+1}</td><td><strong>${c.name}</strong>${i<topN?'<span class="rf">FINALIST</span>':''}</td><td style="color:var(--muted)">Team ${c.team}</td><td class="mono">${c.r.tc.toFixed(1)}</td><td class="mono" style="font-size:.82rem">${c.r.ss[0].toFixed(1)}</td><td class="mono" style="font-size:.82rem">${c.r.ss[1].toFixed(1)}</td><td class="mono" style="font-size:.82rem">${c.r.ss[2].toFixed(1)}</td><td class="mono" style="font-size:.82rem">${c.r.ss[3].toFixed(1)}</td><td class="mono" style="color:var(--danger)">${c.r.pen>0?'−'+c.r.pen:'0'}</td><td class="mono ${c.r.dq?'dq':''}">${c.r.dq?'DQ':c.r.total.toFixed(1)}</td></tr>`).join('')}
     </tbody></table></div>`;
   };
   el.innerHTML=rr('Semi-Final',competitors.filter(c=>c.phase==='semi').length?'semi':'semi',6)+rr('Final','final',1);
