@@ -532,7 +532,9 @@ function upd(compId,key,value,ji){
   else sd[key]=p;
   schedSave(compId);
   renderSidebar();
-  // Update totals in place
+  // Y/N button click (value is number 0 or 1) — re-render scoresheet so button states update
+  if(typeof value==='number'){renderScoresheet();return;}
+  // Numeric input — only update total in place to keep focus
   const comp=competitors.find(c=>c.id===compId);
   if(comp){
     const r=calcTotal(comp);
