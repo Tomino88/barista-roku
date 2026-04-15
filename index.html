@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Barista Roku — Scorekeeping</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
   :root {
@@ -14,178 +15,261 @@
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
-  header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;}
-  .logo{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:.1em;color:var(--accent);}
+
+  /* ── LOGIN ── */
+  #loginView{display:flex;align-items:center;justify-content:center;min-height:100vh;}
+  .login-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2.5rem;width:380px;max-width:95vw;}
+  .login-logo{font-family:'Bebas Neue',sans-serif;font-size:2.5rem;color:var(--accent);letter-spacing:.1em;margin-bottom:.25rem;}
+  .login-logo span{color:var(--text);}
+  .login-sub{color:var(--muted);font-size:.85rem;margin-bottom:2rem;}
+  .lf{margin-bottom:1rem;}
+  .ll{display:block;font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;}
+  .li{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:6px;font-size:.95rem;font-family:'DM Sans',sans-serif;}
+  .li:focus{outline:none;border-color:var(--accent);}
+  .login-btn{width:100%;padding:11px;background:var(--accent);color:#000;border:none;border-radius:6px;font-size:.95rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:.5rem;transition:background .2s;}
+  .login-btn:hover{background:var(--accent2);}
+  .login-error{color:var(--danger);font-size:.8rem;margin-top:.75rem;text-align:center;}
+
+  /* ── APP ── */
+  #appView{display:none;}
+  header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;}
+  .logo{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:.1em;color:var(--accent);}
   .logo span{color:var(--text);}
-  .phase-tabs{display:flex;gap:0;background:var(--bg);border-radius:6px;padding:3px;}
-  .phase-tab{padding:6px 16px;border-radius:4px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:500;transition:all .2s;}
+  .header-right{display:flex;align-items:center;gap:12px;}
+  .user-badge{font-size:.75rem;color:var(--muted);}
+  .phase-tabs{display:flex;background:var(--bg);border-radius:6px;padding:3px;}
+  .phase-tab{padding:5px 14px;border-radius:4px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500;transition:all .2s;}
   .phase-tab.active{background:var(--accent);color:#000;}
-  .app{display:grid;grid-template-columns:280px 1fr;height:calc(100vh - 64px);}
-  .sidebar{background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:1rem 0;}
-  .sidebar-section{padding:.5rem 1rem;font-size:.7rem;font-weight:600;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;}
-  .competitor-item{display:flex;align-items:center;justify-content:space-between;padding:.6rem 1rem;cursor:pointer;transition:background .15s;border-left:3px solid transparent;}
-  .competitor-item:hover{background:var(--surface2);}
-  .competitor-item.active{background:var(--surface2);border-left-color:var(--accent);}
-  .comp-name{font-size:.9rem;font-weight:500;}
-  .comp-score{font-family:'DM Mono',monospace;font-size:.8rem;color:var(--accent2);}
-  .comp-score.dq-label{color:var(--danger);}
-  .add-btn{margin:.75rem 1rem;width:calc(100% - 2rem);padding:8px;background:transparent;border:1px dashed var(--border);color:var(--muted);border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.85rem;transition:all .2s;}
-  .add-btn:hover{border-color:var(--accent);color:var(--accent);}
-  .main{overflow-y:auto;padding:1.5rem 2rem;}
-  .scoresheet-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;}
-  .comp-title{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:.05em;}
-  .comp-subtitle{color:var(--muted);font-size:.85rem;}
-  .meta-row{display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;align-items:flex-end;}
-  .meta-field{display:flex;flex-direction:column;gap:4px;}
-  .meta-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);}
-  .meta-input{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:5px;font-family:'DM Mono',monospace;font-size:.9rem;width:140px;transition:border-color .2s;}
-  .meta-input:focus{outline:none;border-color:var(--accent);}
-  .meta-input.time-input{width:100px;}
-  .dq-badge{display:inline-block;background:var(--danger);color:#fff;padding:4px 12px;border-radius:4px;font-size:.8rem;font-weight:700;letter-spacing:.1em;margin-left:12px;}
-  .sections-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;}
-  .full-width{grid-column:1/-1;}
-  .score-section{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
-  .section-header{padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
-  .section-title{font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;}
-  .section-total{font-family:'DM Mono',monospace;font-size:.85rem;color:var(--accent2);}
-  .section-max{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);}
-  .section-espresso .section-header{background:rgba(139,94,60,.15);}
-  .section-espresso .section-title{color:var(--espresso);}
-  .section-milk .section-header{background:rgba(184,168,152,.1);}
-  .section-milk .section-title{color:var(--milk);}
-  .section-sig .section-header{background:rgba(122,107,158,.15);}
-  .section-sig .section-title{color:var(--sig);}
-  .section-tech .section-header{background:rgba(74,122,138,.15);}
-  .section-tech .section-title{color:var(--tech);}
-  .section-barista .section-header{background:rgba(200,168,75,.1);}
-  .section-barista .section-title{color:var(--accent);}
-  .judge-cols{display:grid;gap:0;}
-  .judge-cols.s4{grid-template-columns:repeat(4,1fr);}
-  .judge-cols.t2{grid-template-columns:repeat(2,1fr);}
-  .judge-col-header{padding:6px 10px;font-size:.65rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);text-align:center;background:var(--surface2);}
-  .judge-col-header:not(:last-child){border-right:1px solid var(--border);}
-  .score-cell{padding:6px 10px;border-bottom:1px solid rgba(51,50,48,.5);display:flex;flex-direction:column;gap:3px;}
-  .score-cell:not(:last-child){border-right:1px solid var(--border);}
-  .score-label{font-size:.65rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .score-mult{font-size:.6rem;color:var(--accent);opacity:.7;}
-  .score-input{background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:.9rem;width:100%;padding:2px 0;text-align:center;transition:border-color .2s;}
-  .score-input:focus{outline:none;border-bottom-color:var(--accent);}
-  .yn-toggle{display:flex;gap:4px;justify-content:center;}
-  .yn-btn{padding:2px 8px;border-radius:3px;border:1px solid var(--border);font-size:.7rem;cursor:pointer;background:transparent;color:var(--muted);font-family:'DM Mono',monospace;transition:all .15s;}
-  .yn-btn.ya{background:var(--ok);border-color:var(--ok);color:#000;font-weight:700;}
-  .yn-btn.na{background:var(--danger);border-color:var(--danger);color:#fff;font-weight:700;}
-  .total-bar{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;margin-top:1rem;}
-  .bd{display:flex;flex-direction:column;align-items:center;gap:2px;}
-  .bd-label{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
-  .bd-val{font-family:'DM Mono',monospace;font-size:1rem;color:var(--accent2);}
-  .total-big{font-family:'Bebas Neue',sans-serif;font-size:3rem;color:var(--accent);letter-spacing:.05em;line-height:1;}
-  /* HEAD JUDGE */
-  .hj-panel{background:var(--surface);border:1px solid rgba(90,170,110,.35);border-radius:8px;overflow:hidden;margin-top:1rem;}
-  .hj-head{padding:12px 16px;background:rgba(90,170,110,.1);border-bottom:1px solid rgba(90,170,110,.25);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
-  .hj-title{font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:#5aaa6e;}
-  .hj-note{font-size:.7rem;color:var(--muted);font-style:italic;}
-  .hj-grid{display:grid;grid-template-columns:repeat(6,1fr);}
-  .hj-cell{padding:10px 12px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:4px;}
-  .hj-cell:last-child{border-right:none;}
-  .hj-cell-label{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
-  .hj-cell-val{font-family:'DM Mono',monospace;font-size:1.1rem;color:var(--accent2);}
-  .hj-foot{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;background:rgba(90,170,110,.06);}
-  .hj-formula{font-size:.8rem;color:var(--muted);}
-  .hj-score{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;color:#5aaa6e;letter-spacing:.05em;}
-  /* RANKINGS */
-  .rankings-view{padding:1.5rem 2rem;}
-  .rankings-title{font-family:'Bebas Neue',sans-serif;font-size:2.5rem;color:var(--accent);letter-spacing:.05em;margin-bottom:1.5rem;}
-  .rankings-table{width:100%;border-collapse:collapse;}
-  .rankings-table th{padding:8px 12px;text-align:left;font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--border);}
-  .rankings-table td{padding:10px 12px;border-bottom:1px solid rgba(51,50,48,.4);font-size:.9rem;}
-  .rankings-table tr:hover td{background:var(--surface2);}
-  .rn{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--muted);width:40px;}
-  .r1 .rn{color:#ffd700;} .r2 .rn{color:#c0c0c0;} .r3 .rn{color:#cd7f32;}
-  .rf{display:inline-block;background:var(--accent);color:#000;font-size:.65rem;font-weight:700;letter-spacing:.08em;padding:2px 6px;border-radius:3px;margin-left:6px;}
-  .sm{font-family:'DM Mono',monospace;color:var(--accent2);font-size:1rem;}
-  .sm.dq{color:var(--danger);}
-  /* MODAL */
-  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:200;}
-  .modal{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.5rem;width:400px;max-width:95vw;}
-  .modal h3{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--accent);margin-bottom:1rem;letter-spacing:.05em;}
-  .mf{margin-bottom:1rem;}
-  .ml{font-size:.8rem;color:var(--muted);margin-bottom:4px;display:block;}
-  .mi{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.9rem;}
-  .mi:focus{outline:none;border-color:var(--accent);}
-  .ma{display:flex;gap:8px;justify-content:flex-end;margin-top:1.5rem;}
-  .btn{padding:8px 18px;border-radius:5px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:500;transition:all .2s;}
-  .btn-p{background:var(--accent);color:#000;}
-  .btn-p:hover{background:var(--accent2);}
+  .btn{padding:7px 14px;border-radius:5px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500;transition:all .2s;}
   .btn-g{background:transparent;color:var(--muted);border:1px solid var(--border);}
   .btn-g:hover{color:var(--text);border-color:var(--text);}
+  .btn-p{background:var(--accent);color:#000;}
+  .btn-p:hover{background:var(--accent2);}
+  .btn-danger{background:transparent;color:var(--danger);border:1px solid var(--danger);}
+  .btn-sm{padding:4px 10px;font-size:.75rem;}
+
+  .app{display:grid;grid-template-columns:260px 1fr;height:calc(100vh - 60px);}
+  .sidebar{background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:1rem 0;}
+  .sidebar-section{padding:.4rem 1rem;font-size:.65rem;font-weight:600;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;}
+  .ci{display:flex;align-items:center;justify-content:space-between;padding:.55rem 1rem;cursor:pointer;transition:background .15s;border-left:3px solid transparent;}
+  .ci:hover{background:var(--surface2);}
+  .ci.active{background:var(--surface2);border-left-color:var(--accent);}
+  .ci-name{font-size:.88rem;font-weight:500;}
+  .ci-score{font-family:'DM Mono',monospace;font-size:.78rem;color:var(--accent2);}
+  .ci-score.dq{color:var(--danger);}
+  .add-btn{margin:.6rem 1rem;width:calc(100% - 2rem);padding:7px;background:transparent;border:1px dashed var(--border);color:var(--muted);border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.82rem;transition:all .2s;}
+  .add-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+  .main{overflow-y:auto;padding:1.5rem 2rem;}
+  .sh{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.25rem;gap:1rem;}
+  .comp-title{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:.05em;}
+  .comp-sub{color:var(--muted);font-size:.82rem;}
+  .dq-badge{display:inline-block;background:var(--danger);color:#fff;padding:3px 10px;border-radius:4px;font-size:.75rem;font-weight:700;letter-spacing:.1em;margin-left:10px;}
+  .meta-row{display:flex;gap:1rem;margin-bottom:1.25rem;flex-wrap:wrap;align-items:flex-end;}
+  .mf{display:flex;flex-direction:column;gap:3px;}
+  .ml{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);}
+  .mi{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:5px;font-family:'DM Mono',monospace;font-size:.88rem;width:100px;transition:border-color .2s;}
+  .mi:focus{outline:none;border-color:var(--accent);}
+  .sections-grid{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:.85rem;}
+  .fw{grid-column:1/-1;}
+  .ss{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  .sh2{padding:9px 13px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+  .st{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;}
+  .sv{font-family:'DM Mono',monospace;font-size:.82rem;color:var(--accent2);}
+  .smx{font-size:.68rem;color:var(--muted);}
+  .se .sh2{background:rgba(139,94,60,.15);} .se .st{color:var(--espresso);}
+  .sm2 .sh2{background:rgba(184,168,152,.1);} .sm2 .st{color:var(--milk);}
+  .ss2 .sh2{background:rgba(122,107,158,.15);} .ss2 .st{color:var(--sig);}
+  .st2 .sh2{background:rgba(74,122,138,.15);} .st2 .st{color:var(--tech);}
+  .sb .sh2{background:rgba(200,168,75,.1);} .sb .st{color:var(--accent);}
+  .jc{display:grid;gap:0;}
+  .jc.s4{grid-template-columns:repeat(4,1fr);}
+  .jc.t2{grid-template-columns:repeat(2,1fr);}
+  .jch{padding:5px 8px;font-size:.62rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);text-align:center;background:var(--surface2);}
+  .jch:not(:last-child){border-right:1px solid var(--border);}
+  .sc{padding:5px 8px;border-bottom:1px solid rgba(51,50,48,.5);display:flex;flex-direction:column;gap:2px;}
+  .sc:not(:last-child){border-right:1px solid var(--border);}
+  .slbl{font-size:.62rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .smult{font-size:.58rem;color:var(--accent);opacity:.7;}
+  .si{background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:.88rem;width:100%;padding:2px 0;text-align:center;transition:border-color .2s;}
+  .si:focus{outline:none;border-bottom-color:var(--accent);}
+  .yn{display:flex;gap:3px;justify-content:center;}
+  .yb{padding:2px 7px;border-radius:3px;border:1px solid var(--border);font-size:.68rem;cursor:pointer;background:transparent;color:var(--muted);font-family:'DM Mono',monospace;transition:all .15s;}
+  .yb.ya{background:var(--ok);border-color:var(--ok);color:#000;font-weight:700;}
+  .yb.na{background:var(--danger);border-color:var(--danger);color:#fff;font-weight:700;}
+  .total-bar{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;margin-top:.85rem;}
+  .bd{display:flex;flex-direction:column;align-items:center;gap:2px;}
+  .bdl{font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+  .bdv{font-family:'DM Mono',monospace;font-size:.95rem;color:var(--accent2);}
+  .tbig{font-family:'Bebas Neue',sans-serif;font-size:2.8rem;color:var(--accent);letter-spacing:.05em;line-height:1;}
+
+  /* ── HEAD JUDGE ── */
+  .hj{background:var(--surface);border:1px solid rgba(90,170,110,.35);border-radius:8px;overflow:hidden;margin-top:.85rem;}
+  .hjh{padding:10px 14px;background:rgba(90,170,110,.1);border-bottom:1px solid rgba(90,170,110,.25);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;}
+  .hjt{font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:#5aaa6e;}
+  .hjn{font-size:.68rem;color:var(--muted);font-style:italic;}
+  .hjg{display:grid;grid-template-columns:repeat(6,1fr);}
+  .hjc{padding:9px 11px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:3px;}
+  .hjc:last-child{border-right:none;}
+  .hjcl{font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+  .hjcv{font-family:'DM Mono',monospace;font-size:1.05rem;color:var(--accent2);}
+  .hjf{padding:11px 14px;display:flex;align-items:center;justify-content:space-between;background:rgba(90,170,110,.06);}
+  .hjfm{font-size:.78rem;color:var(--muted);}
+  .hjfs{font-family:'Bebas Neue',sans-serif;font-size:2rem;color:#5aaa6e;letter-spacing:.05em;}
+
+  /* ── SCANS ── */
+  .scans-panel{background:var(--surface);border:1px solid rgba(122,107,158,.35);border-radius:8px;overflow:hidden;margin-top:.85rem;}
+  .scans-head{padding:10px 14px;background:rgba(122,107,158,.1);border-bottom:1px solid rgba(122,107,158,.25);display:flex;align-items:center;justify-content:space-between;}
+  .scans-title{font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--sig);}
+  .scans-list{padding:.75rem 1rem;display:flex;flex-direction:column;gap:.5rem;}
+  .scan-item{display:flex;align-items:center;justify-content:space-between;padding:.5rem .75rem;background:var(--surface2);border-radius:6px;border:1px solid var(--border);}
+  .scan-info{display:flex;flex-direction:column;gap:2px;}
+  .scan-label{font-size:.8rem;font-weight:500;}
+  .scan-meta{font-size:.68rem;color:var(--muted);}
+  .scan-actions{display:flex;gap:6px;}
+  .upload-area{border:1px dashed var(--border);border-radius:6px;padding:1rem;text-align:center;cursor:pointer;transition:all .2s;margin:.5rem 1rem .75rem;}
+  .upload-area:hover{border-color:var(--sig);background:rgba(122,107,158,.05);}
+  .upload-area input{display:none;}
+  .upload-label-select{display:flex;align-items:center;gap:8px;padding:0 1rem .75rem;}
+  .upload-select{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.82rem;flex:1;}
+  .upload-select:focus{outline:none;border-color:var(--sig);}
+
+  /* ── RANKINGS ── */
+  #rankingView{padding:1.5rem 2rem;}
+  .rt{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;color:var(--accent);letter-spacing:.05em;margin-bottom:1.25rem;}
+  table.rtbl{width:100%;border-collapse:collapse;}
+  table.rtbl th{padding:7px 11px;text-align:left;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--border);}
+  table.rtbl td{padding:9px 11px;border-bottom:1px solid rgba(51,50,48,.4);font-size:.88rem;}
+  table.rtbl tr:hover td{background:var(--surface2);}
+  .rn{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--muted);width:36px;}
+  .r1 .rn{color:#ffd700;} .r2 .rn{color:#c0c0c0;} .r3 .rn{color:#cd7f32;}
+  .rf{display:inline-block;background:var(--accent);color:#000;font-size:.62rem;font-weight:700;letter-spacing:.08em;padding:2px 5px;border-radius:3px;margin-left:5px;}
+  .mono{font-family:'DM Mono',monospace;color:var(--accent2);font-size:.95rem;}
+  .mono.dq{color:var(--danger);}
+
+  /* ── MODAL ── */
+  .mo{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:200;}
+  .md{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.5rem;width:400px;max-width:95vw;}
+  .md h3{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--accent);margin-bottom:1rem;letter-spacing:.05em;}
+  .mdf{margin-bottom:.85rem;}
+  .mdl{font-size:.78rem;color:var(--muted);margin-bottom:4px;display:block;}
+  .mdi{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:.88rem;}
+  .mdi:focus{outline:none;border-color:var(--accent);}
+  .mda{display:flex;gap:8px;justify-content:flex-end;margin-top:1.25rem;}
+
+  /* ── TOAST ── */
+  .toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.75rem 1.25rem;font-size:.85rem;z-index:300;transform:translateY(100px);opacity:0;transition:all .3s;}
+  .toast.show{transform:translateY(0);opacity:1;}
+  .toast.ok{border-color:var(--ok);color:var(--ok);}
+  .toast.err{border-color:var(--danger);color:var(--danger);}
+
+  .spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .saving{font-size:.72rem;color:var(--muted);display:flex;align-items:center;gap:4px;}
+
   .hidden{display:none!important;}
-  ::-webkit-scrollbar{width:6px;}
+  ::-webkit-scrollbar{width:5px;}
   ::-webkit-scrollbar-track{background:var(--bg);}
   ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
 </style>
 </head>
 <body>
-<header>
-  <div class="logo">Barista <span>Roku</span></div>
-  <div class="phase-tabs">
-    <button class="phase-tab active" onclick="setPhase('semi')">Semifinále</button>
-    <button class="phase-tab" onclick="setPhase('final')">Finále</button>
-    <button class="phase-tab" onclick="setPhase('ranking')">Výsledky</button>
-  </div>
-  <div style="display:flex;gap:8px">
-    <button class="btn btn-g" onclick="exportData()">Export JSON</button>
-  </div>
-</header>
 
-<div id="scoreView" class="app">
-  <div class="sidebar">
-    <div class="sidebar-section" id="sidebarLabel">Semifinalisté (0/18)</div>
-    <div id="competitorList"></div>
-    <button class="add-btn" onclick="openAddModal()">+ Přidat soutěžícího</button>
+<!-- LOGIN -->
+<div id="loginView">
+  <div class="login-box">
+    <div class="login-logo">Barista <span>Roku</span></div>
+    <div class="login-sub">Scorekeeping systém</div>
+    <div class="lf"><label class="ll">Email</label><input class="li" type="email" id="loginEmail" placeholder="vas@email.cz" /></div>
+    <div class="lf"><label class="ll">Heslo</label><input class="li" type="password" id="loginPass" placeholder="••••••••" /></div>
+    <button class="login-btn" onclick="doLogin()">Přihlásit se</button>
+    <div class="login-error hidden" id="loginError"></div>
   </div>
-  <div class="main" id="mainContent">
-    <div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);flex-direction:column;gap:8px">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:2rem;color:var(--border)">VYBERTE SOUTĚŽÍCÍHO</div>
-      <div style="font-size:.85rem">nebo přidejte nového pomocí tlačítka níže</div>
+</div>
+
+<!-- APP -->
+<div id="appView">
+  <header>
+    <div class="logo">Barista <span>Roku</span></div>
+    <div class="phase-tabs">
+      <button class="phase-tab active" onclick="setPhase('semi')">Semifinále</button>
+      <button class="phase-tab" onclick="setPhase('final')">Finále</button>
+      <button class="phase-tab" onclick="setPhase('ranking')">Výsledky</button>
+    </div>
+    <div class="header-right">
+      <span class="user-badge" id="userBadge"></span>
+      <div class="saving hidden" id="savingIndicator"><div class="spinner"></div>Ukládám...</div>
+      <button class="btn btn-g" onclick="doLogout()">Odhlásit</button>
+    </div>
+  </header>
+
+  <div id="scoreView" class="app">
+    <div class="sidebar">
+      <div class="sidebar-section" id="sidebarLabel">Semifinalisté (0/18)</div>
+      <div id="competitorList"></div>
+      <button class="add-btn" onclick="openAddModal()">+ Přidat soutěžícího</button>
+    </div>
+    <div class="main" id="mainContent">
+      <div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);flex-direction:column;gap:8px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:2rem;color:var(--border)">VYBERTE SOUTĚŽÍCÍHO</div>
+        <div style="font-size:.82rem">nebo přidejte nového pomocí tlačítka níže</div>
+      </div>
     </div>
   </div>
+
+  <div id="rankingView" class="hidden">
+    <div class="rt">Výsledky</div>
+    <div id="rankingContent"></div>
+  </div>
 </div>
 
-<div id="rankingView" class="rankings-view hidden">
-  <div class="rankings-title">Výsledky</div>
-  <div id="rankingContent"></div>
-</div>
-
-<div class="modal-overlay hidden" id="modalOverlay">
-  <div class="modal">
-    <h3 id="modalTitle">Přidat soutěžícího</h3>
-    <div class="mf"><label class="ml">Jméno</label><input class="mi" id="modalName" placeholder="Jméno Příjmení" /></div>
-    <div class="mf"><label class="ml">Tým judžů</label>
-      <select class="mi" id="modalTeam">
+<!-- MODAL — Add Competitor -->
+<div class="mo hidden" id="addModal">
+  <div class="md">
+    <h3>Přidat soutěžícího</h3>
+    <div class="mdf"><label class="mdl">Jméno</label><input class="mdi" id="modalName" placeholder="Jméno Příjmení" /></div>
+    <div class="mdf"><label class="mdl">Tým judžů</label>
+      <select class="mdi" id="modalTeam">
         <option value="A">Tým A</option><option value="B">Tým B</option><option value="C">Tým C</option>
       </select>
     </div>
-    <div class="ma">
-      <button class="btn btn-g" onclick="closeModal()">Zrušit</button>
-      <button class="btn btn-p" onclick="saveModal()">Uložit</button>
+    <div class="mda">
+      <button class="btn btn-g" onclick="closeModal('addModal')">Zrušit</button>
+      <button class="btn btn-p" onclick="saveCompetitor()">Uložit</button>
     </div>
   </div>
 </div>
 
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
 <script>
-let phase='semi', competitors={semi:[],final:[]}, selectedId=null;
+// ══════════════════════════════════════════════════════════════
+// SUPABASE INIT
+// ══════════════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://cggujadkrrrbeuuxitmm.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_ekXbKIfiSWnRcw8dcjsNCg_pH1OO5qs';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ── SCORE STRUCTURE ────────────────────────────────────────────────────────
-// OFFICIAL MAXIMA (per scoresheet PDFs):
-// Sensory per judge: I=49, II=33, III=42, IV=30, V=12  →  166 total
-// Technical per judge: I=6, II=17, III=22, IV=17, V=9  →  71 total
-// CB semi: 2 tech judges (mirror), 4 sensory judges
-// Final:   no tech judge, 4 sensory judges
+// ══════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════
+let phase = 'semi';
+let competitors = [];   // [{id, name, team, phase}]
+let scoresCache = {};   // {competitorId: scoreData}
+let scansCache = {};    // {competitorId: [scan,...]}
+let selectedId = null;
+let currentUser = null;
+let saveTimeout = null;
 
-function emptyScores(){
-  return{
-    time:'',
-    // TECHNICAL (judge 1; judge 2 mirrors in CB semi)
+// ══════════════════════════════════════════════════════════════
+// SCORE STRUCTURE (WBC 2025 official)
+// Sensory per judge: I=49, II=33, III=42, IV=30, V=24 → 178
+// Technical per judge: I=6, II=17, III=22, IV=17, V=9 → 71
+// ══════════════════════════════════════════════════════════════
+function emptyScoreData() {
+  return {
+    time: '',
     t_clean_start:null,
     t_esp_flush:null,t_esp_dry:null,t_esp_waste:null,t_esp_dose:null,
     t_esp_clean_pf:null,t_esp_brew:null,t_esp_time:null,
@@ -196,381 +280,477 @@ function emptyScores(){
     t_sig_flush:null,t_sig_dry:null,t_sig_waste:null,t_sig_dose:null,
     t_sig_clean_pf:null,t_sig_brew:null,t_sig_time:null,
     t_station:null,t_clean_pf_spouts:null,t_hygiene:null,t_cloths:null,
-    // SENSORY — 4 judges
-    sensory:[0,1,2,3].map(()=>({
-      // Part I Espresso (max 49)
-      s_crema:null,             // Y/N →/1
-      s_esp_taste_desc:null,    // 0-3 ×4 →/12
-      s_esp_tactile_desc:null,  // 0-3 ×2 →/6    subtotal /18
-      s_esp_taste_exp:null,     // 0-6 ×3 →/18
-      s_esp_tactile_exp:null,   // 0-6 ×2 →/12   subtotal /30
-      // Part II Milk (max 33)
-      s_milk_visual:null,       // 0-3 →/3
-      s_milk_taste_desc:null,   // 0-3 ×4 →/12
-      s_milk_taste_exp:null,    // 0-6 ×3 →/18
-      // Part III Signature (max 42)
-      s_sig_acc_taste:null,         // 0-3 ×4 →/12
-      s_sig_well_explained:null,    // 0-6 ×2 →/12
-      s_sig_taste_exp:null,         // 0-6 ×3 →/18
-      // Part IV Barista (max 30) — OPRAVENO: přidáno Coffee Knowledge ×2
-      s_attention:null,             // 0-3 ×2 →/6
-      s_presentation:null,          // 0-6 ×3 →/18
-      s_coffee_knowledge:null,      // 0-3 ×2 →/6
-      // Part V Total Impression (max 12)
-      s_total_impression:null,      // 0-6 ×4 →/24
+    sensory: [0,1,2,3].map(()=>({
+      s_crema:null,
+      s_esp_taste_desc:null, s_esp_tactile_desc:null,
+      s_esp_taste_exp:null, s_esp_tactile_exp:null,
+      s_milk_visual:null, s_milk_taste_desc:null, s_milk_taste_exp:null,
+      s_sig_acc_taste:null, s_sig_well_explained:null, s_sig_taste_exp:null,
+      s_attention:null, s_presentation:null, s_coffee_knowledge:null,
+      s_total_impression:null,
     }))
   };
 }
 
-// ── CALCULATIONS ──────────────────────────────────────────────────────────
-const fv=v=>(v!==null&&v!==''&&!isNaN(parseFloat(v)))?parseFloat(v):null;
-const fy=v=>(v===1?1:v===0?0:null);
+// ══════════════════════════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════════════════════════
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginError');
+  errEl.classList.add('hidden');
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) { errEl.textContent = 'Nesprávný email nebo heslo.'; errEl.classList.remove('hidden'); return; }
+  await initApp(data.user);
+}
 
-function sensoryParts(sj){
-  // I Espresso max 49
+async function doLogout() {
+  await sb.auth.signOut();
+  document.getElementById('appView').style.display = 'none';
+  document.getElementById('loginView').style.display = 'flex';
+}
+
+async function initApp(user) {
+  currentUser = user;
+  document.getElementById('loginView').style.display = 'none';
+  document.getElementById('appView').style.display = 'block';
+  document.getElementById('userBadge').textContent = user.email;
+  await loadAll();
+  renderSidebar();
+}
+
+// ══════════════════════════════════════════════════════════════
+// DATA LOAD
+// ══════════════════════════════════════════════════════════════
+async function loadAll() {
+  const [compsRes, scoresRes, scansRes] = await Promise.all([
+    sb.from('competitors').select('*').order('created_at'),
+    sb.from('scores').select('*'),
+    sb.from('scans').select('*').order('uploaded_at'),
+  ]);
+  competitors = compsRes.data || [];
+  scoresCache = {};
+  (scoresRes.data || []).forEach(r => { scoresCache[r.competitor_id] = r.data; });
+  scansCache = {};
+  (scansRes.data || []).forEach(r => {
+    if (!scansCache[r.competitor_id]) scansCache[r.competitor_id] = [];
+    scansCache[r.competitor_id].push(r);
+  });
+}
+
+function getScores(compId) {
+  return scoresCache[compId] || emptyScoreData();
+}
+
+// ══════════════════════════════════════════════════════════════
+// SAVE SCORES (debounced)
+// ══════════════════════════════════════════════════════════════
+function schedSave(compId) {
+  clearTimeout(saveTimeout);
+  document.getElementById('savingIndicator').classList.remove('hidden');
+  saveTimeout = setTimeout(() => saveScores(compId), 800);
+}
+
+async function saveScores(compId) {
+  const data = scoresCache[compId] || emptyScoreData();
+  const { error } = await sb.from('scores').upsert(
+    { competitor_id: compId, data, updated_by: currentUser.id },
+    { onConflict: 'competitor_id' }
+  );
+  document.getElementById('savingIndicator').classList.add('hidden');
+  if (error) toast('Chyba při ukládání', 'err');
+}
+
+// ══════════════════════════════════════════════════════════════
+// CALCULATIONS (WBC 2025 — Total Impression ×4)
+// ══════════════════════════════════════════════════════════════
+const fv = v => (v!==null&&v!==''&&!isNaN(parseFloat(v))) ? parseFloat(v) : null;
+const fy = v => (v===1?1:v===0?0:null);
+
+function sensoryParts(sj) {
   const cr=fy(sj.s_crema);
   const td=fv(sj.s_esp_taste_desc),  tdw=td!==null?td*4:null;
   const tcd=fv(sj.s_esp_tactile_desc),tcdw=tcd!==null?tcd*2:null;
-  const te=fv(sj.s_esp_taste_exp),    tew=te!==null?te*3:null;
-  const tce=fv(sj.s_esp_tactile_exp), tcew=tce!==null?tce*2:null;
+  const te=fv(sj.s_esp_taste_exp),   tew=te!==null?te*3:null;
+  const tce=fv(sj.s_esp_tactile_exp),tcew=tce!==null?tce*2:null;
   const p1v=[cr,tdw,tcdw,tew,tcew];
   const p1=p1v.every(x=>x!==null)?p1v.reduce((a,b)=>a+b,0):null;
-  // II Milk max 33
+
   const mv=fv(sj.s_milk_visual);
-  const mtd=fv(sj.s_milk_taste_desc), mtdw=mtd!==null?mtd*4:null;
-  const mte=fv(sj.s_milk_taste_exp),  mtew=mte!==null?mte*3:null;
+  const mtd=fv(sj.s_milk_taste_desc),mtdw=mtd!==null?mtd*4:null;
+  const mte=fv(sj.s_milk_taste_exp), mtew=mte!==null?mte*3:null;
   const p2v=[mv,mtdw,mtew];
   const p2=p2v.every(x=>x!==null)?p2v.reduce((a,b)=>a+b,0):null;
-  // III Signature max 42
-  const sat=fv(sj.s_sig_acc_taste),       satw=sat!==null?sat*4:null;
-  const swe=fv(sj.s_sig_well_explained),  swew=swe!==null?swe*2:null;
-  const ste=fv(sj.s_sig_taste_exp),       stew=ste!==null?ste*3:null;
+
+  const sat=fv(sj.s_sig_acc_taste),      satw=sat!==null?sat*4:null;
+  const swe=fv(sj.s_sig_well_explained), swew=swe!==null?swe*2:null;
+  const ste=fv(sj.s_sig_taste_exp),      stew=ste!==null?ste*3:null;
   const p3v=[satw,swew,stew];
   const p3=p3v.every(x=>x!==null)?p3v.reduce((a,b)=>a+b,0):null;
-  // IV Barista max 30
-  const att=fv(sj.s_attention),          attw=att!==null?att*2:null;
-  const pre=fv(sj.s_presentation),       prew=pre!==null?pre*3:null;
-  const ck=fv(sj.s_coffee_knowledge),    ckw=ck!==null?ck*2:null;
+
+  const att=fv(sj.s_attention),         attw=att!==null?att*2:null;
+  const pre=fv(sj.s_presentation),      prew=pre!==null?pre*3:null;
+  const ck=fv(sj.s_coffee_knowledge),   ckw=ck!==null?ck*2:null;
   const p4v=[attw,prew,ckw];
   const p4=p4v.every(x=>x!==null)?p4v.reduce((a,b)=>a+b,0):null;
-  // V Total Impression max 12
-  const ti=fv(sj.s_total_impression),    tiw=ti!==null?ti*4:null;
+
+  const ti=fv(sj.s_total_impression),   tiw=ti!==null?ti*4:null; // ×4 WBC 2025
   const p5=tiw;
   const tot=[p1,p2,p3,p4,p5].every(x=>x!==null)?[p1,p2,p3,p4,p5].reduce((a,b)=>a+b,0):null;
   return{p1,p2,p3,p4,p5,tot};
 }
 
-function techParts(s){
+function techParts(s) {
   const p1=fv(s.t_clean_start);
-  // II max 17: 5 Y/N + waste(0-6) + dose(0-6)
   const eyn=[s.t_esp_flush,s.t_esp_dry,s.t_esp_clean_pf,s.t_esp_brew,s.t_esp_time].map(fy);
-  const enum2=[fv(s.t_esp_waste),fv(s.t_esp_dose)];
+  const en=[fv(s.t_esp_waste),fv(s.t_esp_dose)];
   const p2yn=eyn.every(x=>x!==null)?eyn.reduce((a,b)=>a+b,0):null;
-  const p2n=enum2.every(x=>x!==null)?enum2.reduce((a,b)=>a+b,0):null;
+  const p2n=en.every(x=>x!==null)?en.reduce((a,b)=>a+b,0):null;
   const p2=(p2yn!==null&&p2n!==null)?p2yn+p2n:null;
-  // III max 22: 10 Y/N + waste + dose
   const myn=[s.t_milk_flush,s.t_milk_dry,s.t_milk_clean_pf,s.t_milk_brew,s.t_milk_time,
              s.t_milk_empty,s.t_milk_purge_before,s.t_milk_clean_wand,s.t_milk_purge_after,s.t_milk_waste_ml].map(fy);
   const mn=[fv(s.t_milk_waste_g),fv(s.t_milk_dose)];
   const p3yn=myn.every(x=>x!==null)?myn.reduce((a,b)=>a+b,0):null;
   const p3n=mn.every(x=>x!==null)?mn.reduce((a,b)=>a+b,0):null;
   const p3=(p3yn!==null&&p3n!==null)?p3yn+p3n:null;
-  // IV max 17: 5 Y/N + waste + dose
   const syn=[s.t_sig_flush,s.t_sig_dry,s.t_sig_clean_pf,s.t_sig_brew,s.t_sig_time].map(fy);
   const sn=[fv(s.t_sig_waste),fv(s.t_sig_dose)];
   const p4yn=syn.every(x=>x!==null)?syn.reduce((a,b)=>a+b,0):null;
   const p4n=sn.every(x=>x!==null)?sn.reduce((a,b)=>a+b,0):null;
   const p4=(p4yn!==null&&p4n!==null)?p4yn+p4n:null;
-  // V max 9: station(0-6) + 3 Y/N
   const st=fv(s.t_station);
-  const vyn=[s.t_clean_pf_spouts,s.t_hygiene,s.t_cloths].map(fy);
-  const p5yn=vyn.every(x=>x!==null)?vyn.reduce((a,b)=>a+b,0):null;
-  const p5=(st!==null&&p5yn!==null)?st+p5yn:null;
+  const p5yn=[s.t_clean_pf_spouts,s.t_hygiene,s.t_cloths].map(fy);
+  const p5s=p5yn.every(x=>x!==null)?p5yn.reduce((a,b)=>a+b,0):null;
+  const p5=(st!==null&&p5s!==null)?st+p5s:null;
   const parts=[p1,p2,p3,p4,p5];
   return{p1,p2,p3,p4,p5,tot:parts.every(x=>x!==null)?parts.reduce((a,b)=>a+b,0):null};
 }
 
-function timePenalty(t){
+function timePen(t) {
   if(!t)return 0;
   const[m,s]=t.split(':').map(Number);
   if(isNaN(m)||isNaN(s))return 0;
-  const ov=(m*60+s)-900;
-  return ov<=0?0:Math.min(ov,60);
+  return Math.max(0,Math.min((m*60+s)-900,60));
 }
-function isDQ(t){
-  if(!t)return false;
-  const[m,s]=t.split(':').map(Number);
-  return!isNaN(m)&&!isNaN(s)&&(m*60+s)>960;
-}
+function isDQ(t){if(!t)return false;const[m,s]=t.split(':').map(Number);return!isNaN(m)&&!isNaN(s)&&(m*60+s)>960;}
 
-function calcTotal(comp){
-  const s=comp.scores,fin=comp.phase==='final';
-  if(isDQ(s.time))return{total:null,dq:true,tech:null,tc:null,ss:[null,null,null,null],st:null,pen:0};
-  const pen=timePenalty(s.time);
-  const tr=techParts(s);
-  const ss=s.sensory.map(sj=>sensoryParts(sj).tot);
+function calcTotal(comp) {
+  const sd=getScores(comp.id);
+  const fin=comp.phase==='final';
+  if(isDQ(sd.time))return{total:null,dq:true,tech:null,tc:null,ss:[null,null,null,null],st:null,pen:0};
+  const pen=timePen(sd.time);
+  const tr=techParts(sd);
+  const ss=sd.sensory.map(sj=>sensoryParts(sj).tot);
   const stot=ss.every(x=>x!==null)?ss.reduce((a,b)=>a+b,0):null;
   const tc=(!fin&&tr.tot!==null)?tr.tot*2:null;
   const base=(!fin?(tc!==null&&stot!==null?tc+stot:null):(stot!==null?stot:null));
   return{total:base!==null?base-pen:null,dq:false,tech:tr.tot,tc,ss,st:stot,pen};
 }
 
-// ── PHASE ──────────────────────────────────────────────────────────────────
-function setPhase(p){
+// ══════════════════════════════════════════════════════════════
+// PHASE
+// ══════════════════════════════════════════════════════════════
+function setPhase(p) {
   document.querySelectorAll('.phase-tab').forEach((t,i)=>t.classList.toggle('active',['semi','final','ranking'][i]===p));
   phase=p; selectedId=null;
   if(p==='ranking'){
     document.getElementById('scoreView').classList.add('hidden');
     document.getElementById('rankingView').classList.remove('hidden');
     renderRankings();
-  }else{
+  } else {
     document.getElementById('scoreView').classList.remove('hidden');
     document.getElementById('rankingView').classList.add('hidden');
     renderSidebar();
-    document.getElementById('mainContent').innerHTML=`<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);flex-direction:column;gap:8px"><div style="font-family:'Bebas Neue',sans-serif;font-size:2rem;color:var(--border)">VYBERTE SOUTĚŽÍCÍHO</div><div style="font-size:.85rem">nebo přidejte nového pomocí tlačítka níže</div></div>`;
+    document.getElementById('mainContent').innerHTML=`<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);flex-direction:column;gap:8px"><div style="font-family:'Bebas Neue',sans-serif;font-size:2rem;color:var(--border)">VYBERTE SOUTĚŽÍCÍHO</div><div style="font-size:.82rem">nebo přidejte nového</div></div>`;
   }
 }
 
-// ── SIDEBAR ────────────────────────────────────────────────────────────────
-function renderSidebar(){
+// ══════════════════════════════════════════════════════════════
+// SIDEBAR
+// ══════════════════════════════════════════════════════════════
+function renderSidebar() {
   const list=document.getElementById('competitorList');
   const lbl=document.getElementById('sidebarLabel');
-  const comps=competitors[phase];
+  const comps=competitors.filter(c=>c.phase===phase);
   const max=phase==='semi'?18:6;
   lbl.textContent=`${phase==='semi'?'Semifinalisté':'Finalisté'} (${comps.length}/${max})`;
   list.innerHTML='';
   comps.forEach(c=>{
     const r=calcTotal(c);
     const d=document.createElement('div');
-    d.className='competitor-item'+(c.id===selectedId?' active':'')+(r.dq?' dq':'');
-    d.onclick=()=>selectCompetitor(c.id);
-    const sc=r.dq?'<span class="comp-score dq-label">DQ</span>':r.total!==null?`<span class="comp-score">${r.total.toFixed(1)}</span>`:'<span class="comp-score" style="color:var(--muted)">—</span>';
-    d.innerHTML=`<div><div class="comp-name">${c.name}</div><div style="font-size:.7rem;color:var(--muted)">Tým ${c.team}</div></div>${sc}`;
+    d.className='ci'+(c.id===selectedId?' active':'')+(r.dq?' dq':'');
+    d.onclick=()=>selectComp(c.id);
+    const sc=r.dq?'<span class="ci-score dq">DQ</span>':r.total!==null?`<span class="ci-score">${r.total.toFixed(1)}</span>`:'<span class="ci-score" style="color:var(--muted)">—</span>';
+    d.innerHTML=`<div><div class="ci-name">${c.name}</div><div style="font-size:.68rem;color:var(--muted)">Tým ${c.team}</div></div>${sc}`;
     list.appendChild(d);
   });
 }
 
-function selectCompetitor(id){selectedId=id;renderSidebar();renderScoresheet();}
+async function selectComp(id) {
+  selectedId=id;
+  renderSidebar();
+  renderScoresheet();
+}
 
-// ── SCORESHEET RENDER ──────────────────────────────────────────────────────
-function renderScoresheet(){
-  const comp=competitors[phase].find(c=>c.id===selectedId);
+// ══════════════════════════════════════════════════════════════
+// SCORESHEET RENDER
+// ══════════════════════════════════════════════════════════════
+function renderScoresheet() {
+  const comp=competitors.find(c=>c.id===selectedId);
   if(!comp)return;
-  const s=comp.scores,fin=phase==='final';
+  const sd=getScores(comp.id);
+  const fin=comp.phase==='final';
   const r=calcTotal(comp);
-  const pen=timePenalty(s.time),dq=isDQ(s.time);
+  const pen=timePen(sd.time),dq=isDQ(sd.time);
   const dqH=dq?`<span class="dq-badge">DISKVALIFIKACE</span>`:'';
   const JL=['Sudí 1','Sudí 2','Sudí 3','Sudí 4'];
 
-  // helpers
-  const nc=(lbl,key,mn,mx,mult,ji,maxLbl)=>{
-    const v=ji!==null?s.sensory[ji][key]:s[key];
+  const nc=(lbl,key,mn,mx,mult,ji,ml2)=>{
+    const v=ji!==null?sd.sensory[ji][key]:sd[key];
     const dv=(v!==null&&v!=='')?v:'';
-    const mh=mult?`<span class="score-mult"> ×${mult}</span>`:'';
-    const mxh=maxLbl?`<span style="font-size:.6rem;color:var(--muted);opacity:.6"> /${maxLbl}</span>`:'';
-    return`<div class="score-cell"><div class="score-label">${lbl}${mh}${mxh}</div><input type="number" class="score-input" min="${mn}" max="${mx}" step=".5" value="${dv}" onchange="upd('${key}',this.value,${ji!==null?ji:'null'})" onfocus="this.select()" placeholder="—"/></div>`;
+    const mh=mult?`<span class="smult"> ×${mult}</span>`:'';
+    const mxh=ml2?`<span style="font-size:.58rem;color:var(--muted);opacity:.6"> /${ml2}</span>`:'';
+    return`<div class="sc"><div class="slbl">${lbl}${mh}${mxh}</div><input type="number" class="si" min="${mn}" max="${mx}" step=".5" value="${dv}" onchange="upd('${comp.id}','${key}',this.value,${ji!==null?ji:'null'})" onfocus="this.select()" placeholder="—"/></div>`;
   };
   const yc=(lbl,key,ji)=>{
-    const v=ji!==null?s.sensory[ji][key]:s[key];
-    return`<div class="score-cell"><div class="score-label">${lbl}</div><div class="yn-toggle"><button class="yn-btn ${v===1?'ya':''}" onclick="upd('${key}',1,${ji!==null?ji:'null'})">ANO</button><button class="yn-btn ${v===0?'na':''}" onclick="upd('${key}',0,${ji!==null?ji:'null'})">NE</button></div></div>`;
+    const v=ji!==null?sd.sensory[ji][key]:sd[key];
+    return`<div class="sc"><div class="slbl">${lbl}</div><div class="yn"><button class="yb ${v===1?'ya':''}" onclick="upd('${comp.id}','${key}',1,${ji!==null?ji:'null'})">ANO</button><button class="yb ${v===0?'na':''}" onclick="upd('${comp.id}','${key}',0,${ji!==null?ji:'null'})">NE</button></div></div>`;
   };
 
-  // section builders
   const SS=(title,cls,maxP,colPart,rows)=>{
-    const pts=[0,1,2,3].map(j=>{const p=sensoryParts(s.sensory[j]);const v=p[colPart];return v!==null?v.toFixed(1):'—';});
-    return`<div class="score-section ${cls}"><div class="section-header"><span class="section-title">${title}</span><span class="section-total">${pts.join(' / ')}<span class="section-max"> /${maxP}</span></span></div><div class="judge-cols s4">${JL.map(l=>`<div class="judge-col-header">${l}</div>`).join('')}${rows.map(r=>[0,1,2,3].map(j=>r.yn?yc(r.l,r.k,j):nc(r.l,r.k,0,r.mx||6,r.mult,j,r.ml)).join('')).join('')}</div></div>`;
+    const pts=[0,1,2,3].map(j=>{const p=sensoryParts(sd.sensory[j]);const v=p[colPart];return v!==null?v.toFixed(1):'—';});
+    return`<div class="ss ${cls}"><div class="sh2"><span class="st">${title}</span><span class="sv">${pts.join(' / ')}<span class="smx"> /${maxP}</span></span></div><div class="jc s4">${JL.map(l=>`<div class="jch">${l}</div>`).join('')}${rows.map(r=>[0,1,2,3].map(j=>r.yn?yc(r.l,r.k,j):nc(r.l,r.k,0,r.mx||6,r.mult,j,r.ml)).join('')).join('')}</div></div>`;
   };
 
   const TS=(title,maxP,rows)=>{
     if(fin)return'';
-    return`<div class="score-section section-tech"><div class="section-header"><span class="section-title">${title}</span><span class="section-total">T1 / T2<span class="section-max"> /${maxP}</span></span></div><div class="judge-cols t2"><div class="judge-col-header">Tech Sudí 1</div><div class="judge-col-header">Tech Sudí 2 (=T1)</div>${rows.map(r=>{const v=s[r.k];const mirror=r.yn?`<div class="score-cell"><div class="score-label">${r.l}</div><div style="color:var(--muted);font-size:.8rem;text-align:center;padding:4px 0">${v===1?'✓ ANO':v===0?'✗ NE':'—'}</div></div>`:`<div class="score-cell"><div class="score-label">${r.l}</div><div style="color:var(--muted);font-family:'DM Mono',monospace;font-size:.9rem;text-align:center;padding:4px 0">${v!==null?v:'—'}</div></div>`;return(r.yn?yc(r.l,r.k,null):nc(r.l,r.k,0,r.mx||6,null,null))+mirror;}).join('')}</div></div>`;
+    return`<div class="ss st2"><div class="sh2"><span class="st">${title}</span><span class="sv">T1 / T2<span class="smx"> /${maxP}</span></span></div><div class="jc t2"><div class="jch">Tech Sudí 1</div><div class="jch">Tech Sudí 2 (=T1)</div>${rows.map(r=>{const v=sd[r.k];const mir=r.yn?`<div class="sc"><div class="slbl">${r.l}</div><div style="color:var(--muted);font-size:.78rem;text-align:center;padding:3px 0">${v===1?'✓ ANO':v===0?'✗ NE':'—'}</div></div>`:`<div class="sc"><div class="slbl">${r.l}</div><div style="color:var(--muted);font-family:'DM Mono',monospace;font-size:.88rem;text-align:center;padding:3px 0">${v!==null?v:'—'}</div></div>`;return(r.yn?yc(r.l,r.k,null):nc(r.l,r.k,0,r.mx||6,null,null))+mir;}).join('')}</div></div>`;
   };
 
-  // HEAD JUDGE panel
-  const tr2=techParts(s);
-  const ss2=s.sensory.map(sj=>sensoryParts(sj).tot);
-  const hjT=(()=>{
-    const t=tr2.tot;const allS=ss2.every(x=>x!==null);
-    if(!fin&&t!==null&&allS)return(t*2)+ss2.reduce((a,b)=>a+b,0)-pen;
-    if(fin&&allS)return ss2.reduce((a,b)=>a+b,0)-pen;
-    return null;
-  })();
-  const HJ=`<div class="hj-panel">
-    <div class="hj-head">
-      <span class="hj-title">Head Judge — Souhrnný scoresheet</span>
-      <span class="hj-note">Skóre head judge se nezapočítává do výsledku. Slouží jako přehled pro zápis na HJ scoresheet.</span>
+  // HJ panel
+  const tr2=techParts(sd);
+  const ss2=sd.sensory.map(sj=>sensoryParts(sj).tot);
+  const hjT=(()=>{const t=tr2.tot;const aS=ss2.every(x=>x!==null);if(!fin&&t!==null&&aS)return(t*2)+ss2.reduce((a,b)=>a+b,0)-pen;if(fin&&aS)return ss2.reduce((a,b)=>a+b,0)-pen;return null;})();
+  const HJ=`<div class="hj"><div class="hjh"><span class="hjt">Head Judge — Souhrnný scoresheet</span><span class="hjn">Skóre HJ se nezapočítává. Slouží pro zápis na HJ scoresheet.</span></div><div class="hjg">${!fin?`<div class="hjc"><div class="hjcl">Tech 1 /71</div><div class="hjcv">${tr2.tot!==null?tr2.tot.toFixed(1):'—'}</div></div><div class="hjc"><div class="hjcl">Tech 2 (=T1) /71</div><div class="hjcv">${tr2.tot!==null?tr2.tot.toFixed(1):'—'}</div></div>`:`<div class="hjc"><div class="hjcl">Tech</div><div class="hjcv" style="color:var(--muted)">N/A</div></div><div class="hjc"></div>`}${[0,1,2,3].map(j=>`<div class="hjc"><div class="hjcl">Sensory ${j+1} /178</div><div class="hjcv">${ss2[j]!==null?ss2[j].toFixed(1):'—'}</div></div>`).join('')}</div><div class="hjf"><div><div class="hjfm">${!fin?'T1 + T2 + S1 + S2 + S3 + S4 − penalizace':'S1 + S2 + S3 + S4 − penalizace'}</div>${pen>0?`<div style="font-size:.72rem;color:var(--danger);margin-top:3px">Penalizace: −${pen} bodů${dq?' | DISKVALIFIKACE':''}</div>`:''}</div><div style="text-align:right"><div class="hjfs">${dq?'DQ':hjT!==null?hjT.toFixed(1):'—'}</div><div style="font-size:.68rem;color:var(--muted)">TOTAL SCORE</div></div></div></div>`;
+
+  // SCANS panel
+  const scans=scansCache[comp.id]||[];
+  const SCAN=`<div class="scans-panel"><div class="scans-head"><span class="scans-title">📎 Nascanované scoresheety</span></div>
+    <div class="upload-label-select">
+      <select class="upload-select" id="scanLabelSelect">
+        <option value="Tech Sudí 1">Tech Sudí 1</option>
+        <option value="Tech Sudí 2">Tech Sudí 2</option>
+        <option value="Sensory Sudí 1">Sensory Sudí 1</option>
+        <option value="Sensory Sudí 2">Sensory Sudí 2</option>
+        <option value="Sensory Sudí 3">Sensory Sudí 3</option>
+        <option value="Sensory Sudí 4">Sensory Sudí 4</option>
+        <option value="Head Judge">Head Judge</option>
+      </select>
+      <label class="btn btn-p btn-sm" style="cursor:pointer">
+        Nahrát scan
+        <input type="file" accept="image/*,.pdf" style="display:none" onchange="uploadScan('${comp.id}',this)"/>
+      </label>
     </div>
-    <div class="hj-grid">
-      ${!fin?`
-      <div class="hj-cell"><div class="hj-cell-label">Tech 1 /71</div><div class="hj-cell-val">${tr2.tot!==null?tr2.tot.toFixed(1):'—'}</div></div>
-      <div class="hj-cell"><div class="hj-cell-label">Tech 2 (=T1) /71</div><div class="hj-cell-val">${tr2.tot!==null?tr2.tot.toFixed(1):'—'}</div></div>`
-      :`<div class="hj-cell"><div class="hj-cell-label">Tech</div><div class="hj-cell-val" style="color:var(--muted)">N/A</div></div><div class="hj-cell"></div>`}
-      ${[0,1,2,3].map(j=>`<div class="hj-cell"><div class="hj-cell-label">Sensory ${j+1} /166</div><div class="hj-cell-val">${ss2[j]!==null?ss2[j].toFixed(1):'—'}</div></div>`).join('')}
-    </div>
-    <div class="hj-foot">
-      <div>
-        <div class="hj-formula">${!fin?'T1 + T2 + S1 + S2 + S3 + S4 − penalizace':'S1 + S2 + S3 + S4 − penalizace'}</div>
-        ${pen>0?`<div style="font-size:.75rem;color:var(--danger);margin-top:4px">Penalizace: −${pen} bodů${dq?' | DISKVALIFIKACE':''}</div>`:''}
-      </div>
-      <div style="text-align:right">
-        <div class="hj-score">${dq?'DQ':hjT!==null?hjT.toFixed(1):'—'}</div>
-        <div style="font-size:.7rem;color:var(--muted)">TOTAL SCORE</div>
-      </div>
+    <div class="scans-list" id="scansList">
+      ${scans.length===0?`<div style="color:var(--muted);font-size:.82rem;padding:.25rem 0">Žádné scany zatím nenahrány.</div>`:''}
+      ${scans.map(sc=>`<div class="scan-item">
+        <div class="scan-info">
+          <div class="scan-label">${sc.judge_label}</div>
+          <div class="scan-meta">${sc.file_name} · ${new Date(sc.uploaded_at).toLocaleString('cs')}</div>
+        </div>
+        <div class="scan-actions">
+          <button class="btn btn-g btn-sm" onclick="downloadScan('${sc.file_path}','${sc.file_name}')">Stáhnout</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteScan('${sc.id}','${sc.file_path}','${comp.id}')">✕</button>
+        </div>
+      </div>`).join('')}
     </div>
   </div>`;
 
   document.getElementById('mainContent').innerHTML=`
-    <div class="scoresheet-header">
-      <div><div class="comp-title">${comp.name}${dqH}</div><div class="comp-subtitle">Tým ${comp.team} · ${fin?'Finále':'Semifinále'}</div></div>
-      <button class="btn btn-g" onclick="removeComp('${comp.id}')">Odstranit</button>
+    <div class="sh">
+      <div><div class="comp-title">${comp.name}${dqH}</div><div class="comp-sub">Tým ${comp.team} · ${fin?'Finále':'Semifinále'}</div></div>
+      <button class="btn btn-danger btn-sm" onclick="removeComp('${comp.id}')">Odstranit</button>
     </div>
     <div class="meta-row">
-      <div class="meta-field"><div class="meta-label">Čas (mm:ss)</div>
-        <input class="meta-input time-input" type="text" placeholder="14:35" value="${s.time||''}"
-          onchange="upd('time',this.value,null)" pattern="\\d{1,2}:\\d{2}"/>
+      <div class="mf"><div class="ml">Čas (mm:ss)</div>
+        <input class="mi" type="text" placeholder="14:35" value="${sd.time||''}"
+          onchange="upd('${comp.id}','time',this.value,null)" pattern="\\d{1,2}:\\d{2}"/>
       </div>
-      <div class="meta-field"><div class="meta-label">Penalizace</div>
-        <div style="padding:6px 0;font-family:'DM Mono',monospace;font-size:1rem;color:${pen>0?'var(--danger)':'var(--ok)'}">
-          ${pen>0?`−${pen} bodů`:dq?'<span style="color:var(--danger)">DQ (&gt;16:00)</span>':'0 bodů'}
+      <div class="mf"><div class="ml">Penalizace</div>
+        <div style="padding:6px 0;font-family:'DM Mono',monospace;font-size:.95rem;color:${pen>0?'var(--danger)':'var(--ok)'}">
+          ${pen>0?`−${pen} bodů`:dq?'<span style="color:var(--danger)">DQ</span>':'0 bodů'}
         </div>
       </div>
     </div>
     <div class="sections-grid">
       ${TS('TECH I — Start-Up',6,[{l:'Čistota / clean cloths',k:'t_clean_start',mx:6}])}
-      ${TS('TECH II — Espresso',17,[
-        {l:'Propláchnutí group head',k:'t_esp_flush',yn:true},
-        {l:'Suchý/čistý košík',k:'t_esp_dry',yn:true},
-        {l:'Odpad při dávkování',k:'t_esp_waste',mx:6},
-        {l:'Dávkování a tampování',k:'t_esp_dose',mx:6},
-        {l:'Čistota portafiltru',k:'t_esp_clean_pf',yn:true},
-        {l:'Okamžitý nástřik',k:'t_esp_brew',yn:true},
-        {l:'Čas extrakce (±3s)',k:'t_esp_time',yn:true},
-      ])}
-      ${TS('TECH III — Mléčný nápoj',22,[
-        {l:'Propláchnutí group head',k:'t_milk_flush',yn:true},
-        {l:'Suchý/čistý košík',k:'t_milk_dry',yn:true},
-        {l:'Odpad při dávkování',k:'t_milk_waste_g',mx:6},
-        {l:'Dávkování a tampování',k:'t_milk_dose',mx:6},
-        {l:'Čistota portafiltru',k:'t_milk_clean_pf',yn:true},
-        {l:'Okamžitý nástřik',k:'t_milk_brew',yn:true},
-        {l:'Čas extrakce (±3s)',k:'t_milk_time',yn:true},
-        {l:'Prázdný čistý džbánek',k:'t_milk_empty',yn:true},
-        {l:'Profouknutí trysky před',k:'t_milk_purge_before',yn:true},
-        {l:'Čistota trysky po',k:'t_milk_clean_wand',yn:true},
-        {l:'Profouknutí trysky po',k:'t_milk_purge_after',yn:true},
-        {l:'Přijatelný odpad mléka',k:'t_milk_waste_ml',yn:true},
-      ])}
-      ${TS('TECH IV — Signature',17,[
-        {l:'Propláchnutí group head',k:'t_sig_flush',yn:true},
-        {l:'Suchý/čistý košík',k:'t_sig_dry',yn:true},
-        {l:'Odpad při dávkování',k:'t_sig_waste',mx:6},
-        {l:'Dávkování a tampování',k:'t_sig_dose',mx:6},
-        {l:'Čistota portafiltru',k:'t_sig_clean_pf',yn:true},
-        {l:'Okamžitý nástřik',k:'t_sig_brew',yn:true},
-        {l:'Čas extrakce (±3s)',k:'t_sig_time',yn:true},
-      ])}
-      ${TS('TECH V — Station Management',9,[
-        {l:'Station management / čistota na konci',k:'t_station',mx:6},
-        {l:'Čistota hubic PF',k:'t_clean_pf_spouts',yn:true},
-        {l:'Celková hygiena',k:'t_hygiene',yn:true},
-        {l:'Správné použití utěrek',k:'t_cloths',yn:true},
-      ])}
-      ${SS('SENSORY I — Espresso','section-espresso',49,'p1',[
-        {l:'Crema',k:'s_crema',yn:true},
-        {l:'Přesnost chuťových popisků',k:'s_esp_taste_desc',mult:4,mx:3,ml:'12'},
-        {l:'Přesnost taktilních popisků',k:'s_esp_tactile_desc',mult:2,mx:3,ml:'6'},
-        {l:'Chuťový zážitek',k:'s_esp_taste_exp',mult:3,mx:6,ml:'18'},
-        {l:'Taktilní zážitek',k:'s_esp_tactile_exp',mult:2,mx:6,ml:'12'},
-      ])}
-      ${SS('SENSORY II — Mléčný nápoj','section-milk',33,'p2',[
-        {l:'Vizuální dojem',k:'s_milk_visual',mx:3,ml:'3'},
-        {l:'Přesnost chuťových popisků',k:'s_milk_taste_desc',mult:4,mx:3,ml:'12'},
-        {l:'Chuťový zážitek',k:'s_milk_taste_exp',mult:3,mx:6,ml:'18'},
-      ])}
-      ${SS('SENSORY III — Signature beverage','section-sig',42,'p3',[
-        {l:'Přesnost chuťových popisků',k:'s_sig_acc_taste',mult:4,mx:3,ml:'12'},
-        {l:'Popis, uvedení, příprava',k:'s_sig_well_explained',mult:2,mx:6,ml:'12'},
-        {l:'Chuťový zážitek',k:'s_sig_taste_exp',mult:3,mx:6,ml:'18'},
-      ])}
-      ${SS('SENSORY IV — Barista hodnocení','section-barista',30,'p4',[
-        {l:'Pozornost k detailům',k:'s_attention',mult:2,mx:3,ml:'6'},
-        {l:'Prezentace',k:'s_presentation',mult:3,mx:6,ml:'18'},
-        {l:'Znalost kávy / práce s vybavením',k:'s_coffee_knowledge',mult:2,mx:3,ml:'6'},
-      ])}
-      ${SS('SENSORY V — Celkový dojem','section-barista full-width',24,'p5',[
-        {l:'Celkový dojem',k:'s_total_impression',mult:4,mx:6,ml:'24'},
-      ])}
+      ${TS('TECH II — Espresso',17,[{l:'Propláchnutí group head',k:'t_esp_flush',yn:true},{l:'Suchý/čistý košík',k:'t_esp_dry',yn:true},{l:'Odpad při dávkování',k:'t_esp_waste',mx:6},{l:'Dávkování a tampování',k:'t_esp_dose',mx:6},{l:'Čistota portafiltru',k:'t_esp_clean_pf',yn:true},{l:'Okamžitý nástřik',k:'t_esp_brew',yn:true},{l:'Čas extrakce (±3s)',k:'t_esp_time',yn:true}])}
+      ${TS('TECH III — Mléčný nápoj',22,[{l:'Propláchnutí group head',k:'t_milk_flush',yn:true},{l:'Suchý/čistý košík',k:'t_milk_dry',yn:true},{l:'Odpad při dávkování',k:'t_milk_waste_g',mx:6},{l:'Dávkování a tampování',k:'t_milk_dose',mx:6},{l:'Čistota portafiltru',k:'t_milk_clean_pf',yn:true},{l:'Okamžitý nástřik',k:'t_milk_brew',yn:true},{l:'Čas extrakce (±3s)',k:'t_milk_time',yn:true},{l:'Prázdný čistý džbánek',k:'t_milk_empty',yn:true},{l:'Profouknutí trysky před',k:'t_milk_purge_before',yn:true},{l:'Čistota trysky po',k:'t_milk_clean_wand',yn:true},{l:'Profouknutí trysky po',k:'t_milk_purge_after',yn:true},{l:'Přijatelný odpad mléka',k:'t_milk_waste_ml',yn:true}])}
+      ${TS('TECH IV — Signature',17,[{l:'Propláchnutí group head',k:'t_sig_flush',yn:true},{l:'Suchý/čistý košík',k:'t_sig_dry',yn:true},{l:'Odpad při dávkování',k:'t_sig_waste',mx:6},{l:'Dávkování a tampování',k:'t_sig_dose',mx:6},{l:'Čistota portafiltru',k:'t_sig_clean_pf',yn:true},{l:'Okamžitý nástřik',k:'t_sig_brew',yn:true},{l:'Čas extrakce (±3s)',k:'t_sig_time',yn:true}])}
+      ${TS('TECH V — Station Management',9,[{l:'Station management / čistota',k:'t_station',mx:6},{l:'Čistota hubic PF',k:'t_clean_pf_spouts',yn:true},{l:'Celková hygiena',k:'t_hygiene',yn:true},{l:'Správné použití utěrek',k:'t_cloths',yn:true}])}
+      ${SS('SENSORY I — Espresso','se',49,'p1',[{l:'Crema',k:'s_crema',yn:true},{l:'Přesnost chuťových popisků',k:'s_esp_taste_desc',mult:4,mx:3,ml:'12'},{l:'Přesnost taktilních popisků',k:'s_esp_tactile_desc',mult:2,mx:3,ml:'6'},{l:'Chuťový zážitek',k:'s_esp_taste_exp',mult:3,mx:6,ml:'18'},{l:'Taktilní zážitek',k:'s_esp_tactile_exp',mult:2,mx:6,ml:'12'}])}
+      ${SS('SENSORY II — Mléčný nápoj','sm2',33,'p2',[{l:'Vizuální dojem',k:'s_milk_visual',mx:3,ml:'3'},{l:'Přesnost chuťových popisků',k:'s_milk_taste_desc',mult:4,mx:3,ml:'12'},{l:'Chuťový zážitek',k:'s_milk_taste_exp',mult:3,mx:6,ml:'18'}])}
+      ${SS('SENSORY III — Signature beverage','ss2',42,'p3',[{l:'Přesnost chuťových popisků',k:'s_sig_acc_taste',mult:4,mx:3,ml:'12'},{l:'Popis, uvedení, příprava',k:'s_sig_well_explained',mult:2,mx:6,ml:'12'},{l:'Chuťový zážitek',k:'s_sig_taste_exp',mult:3,mx:6,ml:'18'}])}
+      ${SS('SENSORY IV — Barista hodnocení','sb',30,'p4',[{l:'Pozornost k detailům',k:'s_attention',mult:2,mx:3,ml:'6'},{l:'Prezentace',k:'s_presentation',mult:3,mx:6,ml:'18'},{l:'Znalost kávy / vybavení',k:'s_coffee_knowledge',mult:2,mx:3,ml:'6'}])}
+      ${SS('SENSORY V — Celkový dojem','sb fw',24,'p5',[{l:'Celkový dojem',k:'s_total_impression',mult:4,mx:6,ml:'24'}])}
     </div>
     <div class="total-bar">
-      <div style="display:flex;gap:1.5rem;flex-wrap:wrap">
-        ${!fin&&r.tc!==null?`<div class="bd"><div class="bd-label">Tech T1+T2</div><div class="bd-val">${r.tc.toFixed(1)}<span style="color:var(--muted);font-size:.7rem"> /142</span></div></div>`:''}
-        <div class="bd"><div class="bd-label">Sensory celkem</div><div class="bd-val">${r.st!==null?r.st.toFixed(1):'—'}<span style="color:var(--muted);font-size:.7rem"> /664</span></div></div>
-        ${[0,1,2,3].map(j=>`<div class="bd"><div class="bd-label">S${j+1}</div><div class="bd-val" style="font-size:.85rem">${r.ss[j]!==null?r.ss[j].toFixed(1):'—'}</div></div>`).join('')}
-        ${r.pen>0?`<div class="bd"><div class="bd-label">Penalizace</div><div class="bd-val" style="color:var(--danger)">−${r.pen}</div></div>`:''}
+      <div style="display:flex;gap:1.25rem;flex-wrap:wrap">
+        ${!fin&&r.tc!==null?`<div class="bd"><div class="bdl">Tech T1+T2</div><div class="bdv">${r.tc.toFixed(1)}<span style="color:var(--muted);font-size:.68rem"> /142</span></div></div>`:''}
+        <div class="bd"><div class="bdl">Sensory celkem</div><div class="bdv">${r.st!==null?r.st.toFixed(1):'—'}<span style="color:var(--muted);font-size:.68rem"> /712</span></div></div>
+        ${[0,1,2,3].map(j=>`<div class="bd"><div class="bdl">S${j+1}</div><div class="bdv" style="font-size:.82rem">${r.ss[j]!==null?r.ss[j].toFixed(1):'—'}</div></div>`).join('')}
+        ${r.pen>0?`<div class="bd"><div class="bdl">Penalizace</div><div class="bdv" style="color:var(--danger)">−${r.pen}</div></div>`:''}
       </div>
       <div style="text-align:right">
-        <div class="total-big">${r.dq?'DQ':r.total!==null?r.total.toFixed(1):'—'}</div>
-        <div style="font-size:.7rem;color:var(--muted)">CELKOVÉ SKÓRE</div>
+        <div class="tbig">${r.dq?'DQ':r.total!==null?r.total.toFixed(1):'—'}</div>
+        <div style="font-size:.68rem;color:var(--muted)">CELKOVÉ SKÓRE</div>
       </div>
     </div>
     ${HJ}
+    ${SCAN}
   `;
 }
 
-function upd(key,value,ji){
-  const comp=competitors[phase].find(c=>c.id===selectedId);
-  if(!comp)return;
+// ══════════════════════════════════════════════════════════════
+// UPDATE SCORE
+// ══════════════════════════════════════════════════════════════
+function upd(compId, key, value, ji) {
+  if(!scoresCache[compId]) scoresCache[compId]=emptyScoreData();
+  const sd=scoresCache[compId];
   const p=(value===''||value===null)?null:(value===0||value===1)?value:parseFloat(value);
-  if(ji!==null)comp.scores.sensory[ji][key]=(value===''||value===null)?null:p;
-  else if(key==='time')comp.scores.time=value;
-  else comp.scores[key]=p;
-  saveData();renderSidebar();renderScoresheet();
+  if(ji!==null) sd.sensory[ji][key]=(value===''||value===null)?null:p;
+  else if(key==='time') sd.time=value;
+  else sd[key]=p;
+  renderSidebar();
+  schedSave(compId);
+  // update totals without full re-render
+  const comp=competitors.find(c=>c.id===compId);
+  if(comp){const r=calcTotal(comp);document.querySelector('.tbig')&&(document.querySelector('.tbig').textContent=r.dq?'DQ':r.total!==null?r.total.toFixed(1):'—');}
 }
 
-// ── MODAL ──────────────────────────────────────────────────────────────────
-function openAddModal(){document.getElementById('modalTitle').textContent='Přidat soutěžícího';document.getElementById('modalName').value='';document.getElementById('modalTeam').value='A';document.getElementById('modalOverlay').classList.remove('hidden');setTimeout(()=>document.getElementById('modalName').focus(),100);}
-function closeModal(){document.getElementById('modalOverlay').classList.add('hidden');}
-function saveModal(){
-  const nm=document.getElementById('modalName').value.trim();
-  const tm=document.getElementById('modalTeam').value;
-  if(!nm)return;
-  competitors[phase].push({id:Date.now().toString(),name:nm,team:tm,phase,scores:emptyScores()});
-  saveData();closeModal();renderSidebar();
+// ══════════════════════════════════════════════════════════════
+// SCANS
+// ══════════════════════════════════════════════════════════════
+async function uploadScan(compId, input) {
+  const file=input.files[0];
+  if(!file)return;
+  const label=document.getElementById('scanLabelSelect').value;
+  const ext=file.name.split('.').pop();
+  const path=`${compId}/${Date.now()}.${ext}`;
+  toast('Nahrávám...','');
+  const{error:upErr}=await sb.storage.from('scans').upload(path,file);
+  if(upErr){toast('Chyba při nahrávání','err');return;}
+  const{error:dbErr}=await sb.from('scans').insert({
+    competitor_id:compId, judge_label:label,
+    file_path:path, file_name:file.name, uploaded_by:currentUser.id
+  });
+  if(dbErr){toast('Chyba při ukládání záznamu','err');return;}
+  // reload scans for this comp
+  const{data}=await sb.from('scans').select('*').eq('competitor_id',compId).order('uploaded_at');
+  scansCache[compId]=data||[];
+  input.value='';
+  toast('Scan nahrán ✓','ok');
+  renderScoresheet();
 }
-function removeComp(id){
-  if(!confirm('Odstranit soutěžícího?'))return;
-  competitors[phase]=competitors[phase].filter(c=>c.id!==id);
-  selectedId=null;saveData();renderSidebar();
+
+async function downloadScan(filePath, fileName) {
+  const{data,error}=await sb.storage.from('scans').download(filePath);
+  if(error){toast('Chyba při stahování','err');return;}
+  const url=URL.createObjectURL(data);
+  const a=document.createElement('a');a.href=url;a.download=fileName;a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+async function deleteScan(scanId, filePath, compId) {
+  if(!confirm('Odstranit scan?'))return;
+  await sb.storage.from('scans').remove([filePath]);
+  await sb.from('scans').delete().eq('id',scanId);
+  scansCache[compId]=(scansCache[compId]||[]).filter(s=>s.id!==scanId);
+  toast('Scan odstraněn','ok');
+  renderScoresheet();
+}
+
+// ══════════════════════════════════════════════════════════════
+// COMPETITORS CRUD
+// ══════════════════════════════════════════════════════════════
+function openAddModal(){
+  document.getElementById('modalName').value='';
+  document.getElementById('modalTeam').value='A';
+  document.getElementById('addModal').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('modalName').focus(),100);
+}
+function closeModal(id){document.getElementById(id).classList.add('hidden');}
+
+async function saveCompetitor() {
+  const name=document.getElementById('modalName').value.trim();
+  const team=document.getElementById('modalTeam').value;
+  if(!name)return;
+  const{data,error}=await sb.from('competitors').insert({name,team,phase}).select().single();
+  if(error){toast('Chyba při ukládání','err');return;}
+  competitors.push(data);
+  scoresCache[data.id]=emptyScoreData();
+  await saveScores(data.id);
+  closeModal('addModal');
+  renderSidebar();
+  toast(`${name} přidán/a ✓`,'ok');
+}
+
+async function removeComp(id) {
+  if(!confirm('Odstranit soutěžícího a všechna jeho data?'))return;
+  await sb.from('competitors').delete().eq('id',id);
+  competitors=competitors.filter(c=>c.id!==id);
+  delete scoresCache[id];
+  delete scansCache[id];
+  selectedId=null;
+  renderSidebar();
   document.getElementById('mainContent').innerHTML=`<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted)">Vyberte soutěžícího</div>`;
+  toast('Soutěžící odstraněn','ok');
 }
 
-// ── RANKINGS ────────────────────────────────────────────────────────────────
-function renderRankings(){
+// ══════════════════════════════════════════════════════════════
+// RANKINGS
+// ══════════════════════════════════════════════════════════════
+function renderRankings() {
   const el=document.getElementById('rankingContent');
-  const rr=(label,comps,topN)=>{
+  const rr=(label,ph,topN)=>{
+    const comps=competitors.filter(c=>c.phase===ph);
     const sorted=comps.map(c=>({...c,r:calcTotal(c)})).sort((a,b)=>{
       if(a.r.dq&&!b.r.dq)return 1;if(!a.r.dq&&b.r.dq)return-1;
-      if(a.r.total===null&&b.r.total!==null)return 1;
-      if(a.r.total!==null&&b.r.total===null)return-1;
+      if(a.r.total===null&&b.r.total!==null)return 1;if(a.r.total!==null&&b.r.total===null)return-1;
       return(b.r.total||0)-(a.r.total||0);
     });
-    return`<div style="margin-bottom:2.5rem">
-      <h2 style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--muted);letter-spacing:.08em;margin-bottom:1rem">${label}</h2>
-      <table class="rankings-table"><thead><tr><th>#</th><th>Jméno</th><th>Tým</th><th>Tech</th><th>S1</th><th>S2</th><th>S3</th><th>S4</th><th>Pen.</th><th>Celkem</th></tr></thead><tbody>
-      ${sorted.map((c,i)=>`<tr class="r${i+1}"><td class="rn">${i+1}</td><td><strong>${c.name}</strong>${i<topN?'<span class="rf">POSTUP</span>':''}</td><td style="color:var(--muted)">Tým ${c.team}</td><td class="sm">${c.r.tech!==null?c.r.tech.toFixed(1):'—'}</td><td class="sm" style="font-size:.85rem">${c.r.ss[0]!==null?c.r.ss[0].toFixed(1):'—'}</td><td class="sm" style="font-size:.85rem">${c.r.ss[1]!==null?c.r.ss[1].toFixed(1):'—'}</td><td class="sm" style="font-size:.85rem">${c.r.ss[2]!==null?c.r.ss[2].toFixed(1):'—'}</td><td class="sm" style="font-size:.85rem">${c.r.ss[3]!==null?c.r.ss[3].toFixed(1):'—'}</td><td class="sm" style="color:var(--danger)">${c.r.pen>0?'−'+c.r.pen:'0'}</td><td class="sm ${c.r.dq?'dq':''}">${c.r.dq?'DQ':c.r.total!==null?c.r.total.toFixed(1):'—'}</td></tr>`).join('')}
-      </tbody></table></div>`;
+    return`<div style="margin-bottom:2.5rem"><h2 style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--muted);letter-spacing:.08em;margin-bottom:1rem">${label}</h2>
+    <table class="rtbl"><thead><tr><th>#</th><th>Jméno</th><th>Tým</th><th>Tech</th><th>S1</th><th>S2</th><th>S3</th><th>S4</th><th>Pen.</th><th>Celkem</th></tr></thead><tbody>
+    ${sorted.map((c,i)=>`<tr class="r${i+1}"><td class="rn">${i+1}</td><td><strong>${c.name}</strong>${i<topN?'<span class="rf">POSTUP</span>':''}</td><td style="color:var(--muted)">Tým ${c.team}</td><td class="mono">${c.r.tech!==null?c.r.tech.toFixed(1):'—'}</td><td class="mono" style="font-size:.82rem">${c.r.ss[0]!==null?c.r.ss[0].toFixed(1):'—'}</td><td class="mono" style="font-size:.82rem">${c.r.ss[1]!==null?c.r.ss[1].toFixed(1):'—'}</td><td class="mono" style="font-size:.82rem">${c.r.ss[2]!==null?c.r.ss[2].toFixed(1):'—'}</td><td class="mono" style="font-size:.82rem">${c.r.ss[3]!==null?c.r.ss[3].toFixed(1):'—'}</td><td class="mono" style="color:var(--danger)">${c.r.pen>0?'−'+c.r.pen:'0'}</td><td class="mono ${c.r.dq?'dq':''}">${c.r.dq?'DQ':c.r.total!==null?c.r.total.toFixed(1):'—'}</td></tr>`).join('')}
+    </tbody></table></div>`;
   };
-  el.innerHTML=rr('Semifinále',competitors.semi,6)+rr('Finále',competitors.final,1);
+  el.innerHTML=rr('Semifinále','semi',6)+rr('Finále','final',1);
 }
 
-// ── PERSISTENCE ─────────────────────────────────────────────────────────────
-function saveData(){try{localStorage.setItem('baristaData3',JSON.stringify(competitors));}catch(e){}}
-function loadData(){try{const d=localStorage.getItem('baristaData3');if(d)competitors=JSON.parse(d);}catch(e){}}
-function exportData(){const b=new Blob([JSON.stringify(competitors,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='barista_roku_scores.json';a.click();}
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+// ══════════════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════════════
+let toastTimeout;
+function toast(msg,type) {
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.className='toast show '+(type||'');
+  clearTimeout(toastTimeout);
+  toastTimeout=setTimeout(()=>el.className='toast',2500);
+}
 
-loadData();
-renderSidebar();
+// ══════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.mo').forEach(m=>m.classList.add('hidden'));}});
+document.getElementById('loginEmail').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('loginPass').focus();});
+document.getElementById('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+
+// Check existing session
+(async()=>{
+  const{data:{session}}=await sb.auth.getSession();
+  if(session)await initApp(session.user);
+})();
 </script>
 </body>
 </html>
