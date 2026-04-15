@@ -483,7 +483,7 @@ function renderScoresheet(){
 
   // Scans
   const scans=scansCache[comp.id]||[];
-  const SCAN=`<div class="scans-panel"><div class="scans-head"><span class="scans-title">📎 Scanned Scoresheets</span></div><div class="upload-label-select"><select class="upload-select" id="scanLabelSelect"><option>Tech Judge 1</option><option>Tech Judge 2</option><option>Sensory Judge 1</option><option>Sensory Judge 2</option><option>Sensory Judge 3</option><option>Sensory Judge 4</option><option>Head Judge</option></select><label class="btn btn-p btn-sm" style="cursor:pointer">Upload Scan<input type="file" accept="image/*,.pdf" style="display:none" onchange="uploadScan('${comp.id}',this)"/></label></div><div class="scans-list">${scans.length===0?`<div style="color:var(--muted);font-size:.82rem">No scans uploaded yet.</div>`:''}${scans.map(sc=>`<div class="scan-item"><div><div class="scan-label">${sc.judge_label}</div><div class="scan-meta">${sc.file_name} · ${new Date(sc.uploaded_at).toLocaleString('en')}</div></div><div class="scan-actions"><button class="btn btn-g btn-sm" onclick="downloadScan('${sc.file_path}','${sc.file_name}')">Download</button><button class="btn btn-danger btn-sm" onclick="deleteScan('${sc.id}','${sc.file_path}','${comp.id}')">✕</button></div></div>`).join('')}</div></div>`;
+  const SCAN=`<div class="scans-panel"><div class="scans-head"><span class="scans-title">📎 Scanned Scoresheets</span></div><div class="upload-label-select"><label class="btn btn-p btn-sm" style="cursor:pointer">Upload Scans<input type="file" accept="image/*,.pdf" multiple style="display:none" onchange="uploadScan('${comp.id}',this)"/></label><span style="font-size:.72rem;color:var(--muted);margin-left:8px">Select multiple files at once — filename used as label</span></div><div class="scans-list">${scans.length===0?`<div style="color:var(--muted);font-size:.82rem">No scans uploaded yet.</div>`:''}${scans.map(sc=>`<div class="scan-item"><div><div class="scan-label">${sc.judge_label}</div><div class="scan-meta">${sc.file_name} · ${new Date(sc.uploaded_at).toLocaleString('en')}</div></div><div class="scan-actions"><button class="btn btn-g btn-sm" onclick="downloadScan('${sc.file_path}','${sc.file_name}')">Download</button><button class="btn btn-danger btn-sm" onclick="deleteScan('${sc.id}','${sc.file_path}','${comp.id}')">✕</button></div></div>`).join('')}</div></div>`;
 
   document.getElementById('mainContent').innerHTML=`
     <div class="sh">
@@ -543,18 +543,21 @@ function upd(compId,key,value,ji){
 
 // ── SCANS ────────────────────────────────────────────────────
 async function uploadScan(compId,input){
-  const file=input.files[0];if(!file)return;
-  const label=document.getElementById('scanLabelSelect').value;
-  const ext=file.name.split('.').pop();
-  const path=`${compId}/${Date.now()}.${ext}`;
-  toast('Uploading...','');
-  const{error:upErr}=await sb.storage.from('scans').upload(path,file);
-  if(upErr){toast('Upload failed','err');return;}
-  await sb.from('scans').insert({competitor_id:compId,judge_label:label,file_path:path,file_name:file.name,uploaded_by:currentUser.id});
+  const files=Array.from(input.files);if(!files.length)return;
+  toast(`Uploading ${files.length} file(s)...`,'');
+  let failed=0;
+  for(const file of files){
+    const label=file.name.replace(/\.[^.]+$/,'');
+    const ext=file.name.split('.').pop();
+    const path=`${compId}/${Date.now()}-${Math.random().toString(36).slice(2,7)}.${ext}`;
+    const{error:upErr}=await sb.storage.from('scans').upload(path,file);
+    if(upErr){failed++;continue;}
+    await sb.from('scans').insert({competitor_id:compId,judge_label:label,file_path:path,file_name:file.name,uploaded_by:currentUser.id});
+  }
   const{data}=await sb.from('scans').select('*').eq('competitor_id',compId).order('uploaded_at');
   scansCache[compId]=data||[];
   input.value='';
-  toast('Scan uploaded ✓','ok');
+  toast(failed?`Done — ${failed} file(s) failed`:`${files.length} scan(s) uploaded ✓`,failed?'err':'ok');
   renderScoresheet();
 }
 async function downloadScan(filePath,fileName){
