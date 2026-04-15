@@ -171,6 +171,8 @@ table.rtbl tr:hover td{background:var(--accent-light);}
 @keyframes spin{to{transform:rotate(360deg);}}
 .saving{font-size:.72rem;color:var(--muted);display:flex;align-items:center;gap:4px;}
 
+.btn-p.dirty{background:#e67e22;box-shadow:0 0 0 2px rgba(230,126,34,.35);}
+.btn-p.dirty:hover{background:#d35400;}
 .hidden{display:none!important;}
 ::-webkit-scrollbar{width:5px;height:5px;}
 ::-webkit-scrollbar-track{background:var(--bg);}
@@ -248,7 +250,7 @@ const SUPA_URL='https://cggujadkrrrbeuuxitmm.supabase.co';
 const SUPA_KEY='sb_publishable_ekXbKIfiSWnRcw8dcjsNCg_pH1OO5qs';
 const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
 
-let phase='semi',competitors=[],scoresCache={},scansCache={},selectedId=null,currentUser=null,saveTimeout=null;
+let phase='semi',competitors=[],scoresCache={},scansCache={},selectedId=null,currentUser=null,saveTimeout=null,isDirty=false;
 
 // ── SCORE STRUCTURE ──────────────────────────────────────────
 // WBC 2025 official maxima:
@@ -391,16 +393,16 @@ async function loadAll(){
   });
 }
 
-let saveTimeout2=null;
-function schedSave(compId){
-  clearTimeout(saveTimeout2);
-  document.getElementById('savingIndicator').classList.remove('hidden');
-  saveTimeout2=setTimeout(()=>saveScores(compId),900);
-}
 async function saveScores(compId){
   const data=scoresCache[compId]||emptyScoreData();
-  await sb.from('scores').upsert({competitor_id:compId,data,updated_by:currentUser.id},{onConflict:'competitor_id'});
-  document.getElementById('savingIndicator').classList.add('hidden');
+  const{error}=await sb.from('scores').upsert({competitor_id:compId,data,updated_by:currentUser.id},{onConflict:'competitor_id'});
+  if(error){toast('Save failed','err');return;}
+  isDirty=false;
+  toast('Saved ✓','ok');
+  renderScoresheet();
+}
+async function manualSave(){
+  if(selectedId)await saveScores(selectedId);
 }
 
 // ── PHASE ────────────────────────────────────────────────────
@@ -488,7 +490,10 @@ function renderScoresheet(){
   document.getElementById('mainContent').innerHTML=`
     <div class="sh">
       <div><div class="comp-title">${comp.name}${dqH}</div><div class="comp-sub">Team ${comp.team} · ${fin?'Final':'Semi-Final'}</div></div>
-      <button class="btn btn-danger btn-sm" onclick="removeComp('${comp.id}')">Remove</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button id="saveBtn" class="btn btn-p${isDirty?' dirty':''}" onclick="manualSave()" style="font-weight:700">Save${isDirty?' •':''}</button>
+        <button class="btn btn-danger btn-sm" onclick="removeComp('${comp.id}')">Remove</button>
+      </div>
     </div>
     <div class="meta-row">
       <div class="mf"><div class="ml">Competition Time (mm:ss)</div><input class="mi" type="text" placeholder="14:35" value="${sd.time||''}" onchange="upd('${comp.id}','time',this.value,null)" pattern="\\d{1,2}:\\d{2}"/></div>
@@ -530,7 +535,8 @@ function upd(compId,key,value,ji){
   if(ji!==null)sd.sensory[ji][key]=(value===''||value===null)?null:p;
   else if(key==='time')sd.time=value;
   else sd[key]=p;
-  schedSave(compId);
+  isDirty=true;
+  const sb2=document.getElementById('saveBtn');if(sb2)sb2.classList.add('dirty');
   renderSidebar();
   // Y/N button click (value is number 0 or 1) — re-render scoresheet so button states update
   if(typeof value==='number'){renderScoresheet();return;}
