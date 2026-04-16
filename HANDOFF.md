@@ -12,8 +12,17 @@ Scorekeeping appka pro Czech Barista Championship 2026.
 ## Supabase
 - URL: https://cggujadkrrrbeuuxitmm.supabase.co
 - Publishable key: sb_publishable_ekXbKIfiSWnRcw8dcjsNCg_pH1OO5qs
-- Tabulky: competitors, scores, scans
+- Tabulky: competitors (+ sloupec email), scores, scans
 - Storage bucket: scans (max 10MB, jpg/png/pdf)
+- SQL pro přidání email sloupce (spustit jednou v SQL editoru):
+  ALTER TABLE competitors ADD COLUMN IF NOT EXISTS email text;
+
+## Email (Resend)
+- Edge function: /api/send-email.js
+- From: noreply@uctotom.cz
+- Env vars nutné nastavit ve Vercel dashboard (Settings → Environment Variables):
+  RESEND_API_KEY=re_...
+  SUPABASE_SERVICE_ROLE_KEY=...
 
 ## Stack
 - Frontend: vanilla HTML/JS, single file index.html

@@ -231,6 +231,7 @@ table.rtbl tr:hover td{background:var(--accent-light);}
   <div class="md">
     <h3>Add Competitor</h3>
     <div class="mdf"><label class="mdl">Name</label><input class="mdi" id="modalName" placeholder="First Last"/></div>
+    <div class="mdf"><label class="mdl">Email (optional)</label><input class="mdi" id="modalEmail" type="email" placeholder="competitor@email.com"/></div>
     <div class="mdf"><label class="mdl">Judge Team</label>
       <select class="mdi" id="modalTeam">
         <option value="1">Team 1</option><option value="2">Team 2</option><option value="3">Team 3</option>
@@ -486,7 +487,8 @@ function renderScoresheet(){
 
   // Scans
   const scans=scansCache[comp.id]||[];
-  const SCAN=`<div class="scans-panel"><div class="scans-head"><span class="scans-title">📎 Scanned Scoresheets</span></div><div class="upload-label-select"><label class="btn btn-p btn-sm" style="cursor:pointer">Upload Scans<input type="file" accept="image/*,.pdf" multiple style="display:none" onchange="uploadScan('${comp.id}',this)"/></label><span style="font-size:.72rem;color:var(--muted);margin-left:8px">Select multiple files at once — filename used as label</span></div><div class="scans-list">${scans.length===0?`<div style="color:var(--muted);font-size:.82rem">No scans uploaded yet.</div>`:''}${scans.map(sc=>`<div class="scan-item"><div><div class="scan-label">${sc.judge_label}</div><div class="scan-meta">${sc.file_name} · ${new Date(sc.uploaded_at).toLocaleString('en')}</div></div><div class="scan-actions"><button class="btn btn-g btn-sm" onclick="downloadScan('${sc.file_path}','${sc.file_name}')">Download</button><button class="btn btn-danger btn-sm" onclick="deleteScan('${sc.id}','${sc.file_path}','${comp.id}')">✕</button></div></div>`).join('')}</div></div>`;
+  const sendBtn=(comp.email&&scans.length>0)?`<button class="btn btn-g btn-sm" onclick="sendToCompetitor('${comp.id}')" style="color:#2e7d32;border-color:#b2dfdb;">Send to competitor</button>`:'';
+  const SCAN=`<div class="scans-panel"><div class="scans-head"><span class="scans-title">📎 Scanned Scoresheets</span><div style="display:flex;align-items:center;gap:8px">${comp.email?`<span style="font-size:.7rem;color:var(--muted)">${comp.email}</span>`:''} ${sendBtn}</div></div><div class="upload-label-select"><label class="btn btn-p btn-sm" style="cursor:pointer">Upload Scans<input type="file" accept="image/*,.pdf" multiple style="display:none" onchange="uploadScan('${comp.id}',this)"/></label><span style="font-size:.72rem;color:var(--muted);margin-left:8px">Select multiple files at once — filename used as label</span></div><div class="scans-list">${scans.length===0?`<div style="color:var(--muted);font-size:.82rem">No scans uploaded yet.</div>`:''}${scans.map(sc=>`<div class="scan-item"><div><div class="scan-label">${sc.judge_label}</div><div class="scan-meta">${sc.file_name} · ${new Date(sc.uploaded_at).toLocaleString('en')}</div></div><div class="scan-actions"><button class="btn btn-g btn-sm" onclick="downloadScan('${sc.file_path}','${sc.file_name}')">Download</button><button class="btn btn-danger btn-sm" onclick="deleteScan('${sc.id}','${sc.file_path}','${comp.id}')">✕</button></div></div>`).join('')}</div></div>`;
 
   document.getElementById('mainContent').innerHTML=`
     <div class="sh">
@@ -583,15 +585,36 @@ async function deleteScan(scanId,filePath,compId){
   scansCache[compId]=(scansCache[compId]||[]).filter(s=>s.id!==scanId);
   toast('Scan deleted','ok');renderScoresheet();
 }
+async function sendToCompetitor(compId){
+  const comp=competitors.find(c=>c.id===compId);
+  if(!comp||!comp.email)return;
+  const scans=scansCache[compId]||[];
+  if(!scans.length){toast('No scans to send','err');return;}
+  if(!confirm(`Send ${scans.length} scoresheet(s) to ${comp.email}?`))return;
+  toast('Sending…','');
+  const res=await fetch('/api/send-email',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      competitor_id:comp.id,
+      competitor_name:comp.name,
+      competitor_email:comp.email,
+      scans:scans.map(s=>({judge_label:s.judge_label,file_path:s.file_path})),
+    }),
+  });
+  if(res.ok){toast('Email sent ✓','ok');}
+  else{const t=await res.text();toast(`Send failed: ${t}`,'err');}
+}
 
 // ── COMPETITORS ──────────────────────────────────────────────
-function openAddModal(){document.getElementById('modalName').value='';document.getElementById('modalTeam').value='1';document.getElementById('addModal').classList.remove('hidden');setTimeout(()=>document.getElementById('modalName').focus(),100);}
+function openAddModal(){document.getElementById('modalName').value='';document.getElementById('modalEmail').value='';document.getElementById('modalTeam').value='1';document.getElementById('addModal').classList.remove('hidden');setTimeout(()=>document.getElementById('modalName').focus(),100);}
 function closeModal(id){document.getElementById(id).classList.add('hidden');}
 async function saveCompetitor(){
   const name=document.getElementById('modalName').value.trim();
+  const email=document.getElementById('modalEmail').value.trim()||null;
   const team=document.getElementById('modalTeam').value;
   if(!name)return;
-  const{data,error}=await sb.from('competitors').insert({name,team,phase}).select().single();
+  const{data,error}=await sb.from('competitors').insert({name,email,team,phase}).select().single();
   if(error){toast('Save error','err');return;}
   competitors.push(data);
   scoresCache[data.id]=emptyScoreData();
