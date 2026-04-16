@@ -457,7 +457,8 @@ function renderScoresheet(){
     const dv=(v!==null&&v!=='')?v:'';
     const mh=mult?`<span class="smult"> ×${mult}</span>`:'';
     const mxh=ml2?`<span style="font-size:.58rem;color:var(--muted)"> /${ml2}</span>`:'';
-    return`<div class="sc"><div class="slbl">${lbl}${mh}${mxh}</div><input type="number" class="si" min="${mn}" max="${mx}" step=".5" value="${dv}" onchange="upd('${comp.id}','${key}',this.value,${ji!==null?ji:'null'})" onfocus="this.select()" placeholder="—"/></div>`;
+    const calc=(mult&&dv!=='')?`<div style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--accent);text-align:center;margin-top:2px">${dv} × ${mult} = ${(parseFloat(dv)*mult).toFixed(1).replace(/\.0$/,'')}</div>`:'';
+    return`<div class="sc"><div class="slbl">${lbl}${mh}${mxh}</div><input type="number" class="si" min="${mn}" max="${mx}" step=".5" value="${dv}" onchange="upd('${comp.id}','${key}',this.value,${ji!==null?ji:'null'})" onfocus="this.select()" placeholder="—"/>${calc}</div>`;
   };
   const yc=(lbl,key,ji)=>{
     const v=ji!==null?sd.sensory[ji][key]:sd[key];
