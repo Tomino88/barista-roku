@@ -482,7 +482,9 @@ function renderSidebar(){
     // Top 6 auto panel
     const semi=competitors.filter(c=>c.phase==='semi')
       .map(c=>({...c,r:calcTotal(c)})).filter(c=>!c.r.dq)
-      .sort((a,b)=>b.r.total-a.r.total).slice(0,6);
+      .sort((a,b)=>b.r.total-a.r.total).slice(0,6)
+      .sort((a,b)=>{const ao=a.final_order!=null?a.final_order:9999,bo=b.final_order!=null?b.final_order:9999;return ao!==bo?ao-bo:b.r.total-a.r.total;});
+    const medals=['🥇','🥈','🥉'],medalBg=['#FFF8E1','#F5F5F5','#FBE9E7'];
     top.innerHTML='';
     // Top 6 section
     const t6wrap=document.createElement('div');
@@ -492,8 +494,10 @@ function renderSidebar(){
     t6hdr.textContent='Top 6 — Semi-Final';
     t6wrap.appendChild(t6hdr);
     semi.forEach((c,i)=>{
+      const isSelected=c.id===selectedId;
+      const rowBg=isSelected?'#e8f4fd':i<3?medalBg[i]:'transparent';
       const row=document.createElement('div');
-      row.style.cssText=`display:flex;align-items:center;gap:6px;padding:4px 0;cursor:pointer;border-radius:6px;padding-left:4px;padding-right:4px;background:${c.id===selectedId?'var(--accent-light, #e8f4fd)':'transparent'};${i<5?'border-bottom:1px solid #edf2f7':''}`;
+      row.style.cssText=`display:flex;align-items:center;gap:6px;padding:4px;cursor:pointer;border-radius:6px;background:${rowBg};${i<5?'border-bottom:1px solid #edf2f7':''}`;
       row.onclick=()=>selectComp(c.id);
       const rank=document.createElement('span');
       rank.style.cssText="font-family:'Bebas Neue',sans-serif;color:var(--muted);font-size:1rem;min-width:18px";
@@ -502,7 +506,7 @@ function renderSidebar(){
       info.style.cssText='flex:1;min-width:0';
       const nm=document.createElement('div');
       nm.style.cssText='font-size:.8rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
-      nm.textContent=c.name;
+      nm.textContent=(i<3?medals[i]+' ':'')+c.name;
       const sc=document.createElement('div');
       sc.style.cssText="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--accent)";
       sc.textContent=c.r.total.toFixed(1);
