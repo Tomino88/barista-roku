@@ -273,6 +273,7 @@ const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
 let phase='semi',competitors=[],scoresCache={},scansCache={},selectedId=null,currentUser=null,saveTimeout=null,isDirty=false;
 const lastSelectedId={semi:null,final:null};
 let finalJudges=JSON.parse(localStorage.getItem('finalJudges')||'[0,1,2,3]');
+let headJudgeName=localStorage.getItem('headJudgeName')||'';
 
 // ── SCORE STRUCTURE ──────────────────────────────────────────
 // CBC 2026 scoring:
@@ -598,7 +599,7 @@ function renderScoresheet(){
   const tr2=techScore(sd);
   const ss2=sd.sensory.map(sj=>sensoryScore(sj).tot);
   const hjT=(tr2.tot*2)+ss2.reduce((a,b)=>a+b,0)-pen;
-  const HJ=`<div class="hj"><div class="hjh"><span class="hjt">Head Judge — Summary Scoresheet</span><span class="hjn">HJ scores do not count towards total. For reference when completing the HJ scoresheet.</span></div><div class="hjg"><div class="hjc"><div class="hjcl">Tech 1 /71</div><div class="hjcv">${tr2.tot.toFixed(1)}</div></div><div class="hjc"><div class="hjcl">Tech 2 (=T1) /71</div><div class="hjcv">${tr2.tot.toFixed(1)}</div></div>${[0,1,2,3].map(j=>`<div class="hjc"><div class="hjcl">Sensory ${j+1} /166</div><div class="hjcv">${ss2[j].toFixed(1)}</div></div>`).join('')}</div><div class="hjf"><div><div class="hjfm">T1 + T2 + S1 + S2 + S3 + S4 − time penalty</div>${pen>0?`<div style="font-size:.72rem;color:var(--danger);margin-top:3px">Penalty: −${pen} pts${dq?' | DISQUALIFIED':''}</div>`:''}</div><div style="text-align:right"><div class="hjfs">${dq?'DQ':hjT.toFixed(1)}</div><div style="font-size:.68rem;color:var(--muted)">TOTAL SCORE</div></div></div></div>`;
+  const HJ=`<div class="hj"><div class="hjh"><span class="hjt">Head Judge — Summary Scoresheet${headJudgeName?` · ${headJudgeName}`:''}</span><span class="hjn">HJ scores do not count towards total. For reference when completing the HJ scoresheet.</span></div><div class="hjg"><div class="hjc"><div class="hjcl">Tech 1 /71</div><div class="hjcv">${tr2.tot.toFixed(1)}</div></div><div class="hjc"><div class="hjcl">Tech 2 (=T1) /71</div><div class="hjcv">${tr2.tot.toFixed(1)}</div></div>${[0,1,2,3].map(j=>`<div class="hjc"><div class="hjcl">Sensory ${j+1} /166</div><div class="hjcv">${ss2[j].toFixed(1)}</div></div>`).join('')}</div><div class="hjf"><div><div class="hjfm">T1 + T2 + S1 + S2 + S3 + S4 − time penalty</div>${pen>0?`<div style="font-size:.72rem;color:var(--danger);margin-top:3px">Penalty: −${pen} pts${dq?' | DISQUALIFIED':''}</div>`:''}</div><div style="text-align:right"><div class="hjfs">${dq?'DQ':hjT.toFixed(1)}</div><div style="font-size:.68rem;color:var(--muted)">TOTAL SCORE</div></div></div></div>`;
 
   // Scans
   const scans=scansCache[comp.id]||[];
@@ -617,6 +618,7 @@ function renderScoresheet(){
     <div class="meta-row">
       <div class="mf"><div class="ml">Competition Time (mm:ss)</div><input class="mi" type="text" placeholder="14:35" value="${sd.time||''}" onchange="upd('${comp.id}','time',this.value,null)" pattern="\\d{1,2}:\\d{2}"/></div>
       <div class="mf"><div class="ml">Time Penalty</div><div style="padding:7px 0;font-family:'DM Mono',monospace;font-size:.95rem;color:${pen>0?'var(--danger)':'var(--ok)'};">${pen>0?`−${pen} pts`:dq?'<span style="color:var(--danger)">DQ (&gt;16:00)</span>':'0 pts'}</div></div>
+      <div class="mf"><div class="ml">Head Judge</div><input class="mi" type="text" placeholder="Name" value="${headJudgeName}" onchange="headJudgeName=this.value;localStorage.setItem('headJudgeName',this.value)" style="width:160px"/></div>
     </div>
     <div class="sections-grid">
       ${TS('TECH I — Station at Start-Up',6,[{l:'Clean Working Area / Clean Cloths',k:'t_clean_start',mx:6}])}
@@ -633,7 +635,7 @@ function renderScoresheet(){
     <div class="total-bar">
       <div style="display:flex;gap:1.25rem;flex-wrap:wrap;align-items:center">
         <div class="bd"><div class="bdl">Tech (T1+T2)</div><div class="bdv">${r.tc.toFixed(1)}<span style="color:var(--muted);font-size:.68rem"> /142</span></div></div>
-        <div class="bd"><div class="bdl">Sensory Total</div><div class="bdv">${r.st.toFixed(1)}<span style="color:var(--muted);font-size:.68rem"> /712</span></div></div>
+        <div class="bd"><div class="bdl">Sensory Total</div><div class="bdv">${r.st.toFixed(1)}<span style="color:var(--muted);font-size:.68rem"> /664</span></div></div>
         ${activeJudgeIndices.map(j=>`<div class="bd"><div class="bdl">S${j+1}</div><div class="bdv" style="font-size:.85rem">${r.ss[j].toFixed(1)}</div></div>`).join('')}
         ${r.pen>0?`<div class="bd"><div class="bdl">Penalty</div><div class="bdv" style="color:var(--danger)">−${r.pen}</div></div>`:''}
       </div>
