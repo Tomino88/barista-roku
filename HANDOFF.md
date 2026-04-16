@@ -20,9 +20,9 @@ Scorekeeping appka pro Czech Barista Championship 2026.
 ## Email (Resend)
 - Edge function: /api/send-email.js
 - From: noreply@uctotom.cz
-- Env vars nutné nastavit ve Vercel dashboard (Settings → Environment Variables):
-  RESEND_API_KEY=re_...
-  SUPABASE_SERVICE_ROLE_KEY=...
+- Env vars nastaveny ve Vercel (Production + Preview + Development): ✅
+  RESEND_API_KEY — nastaveno
+  SUPABASE_SERVICE_ROLE_KEY — nastaveno
 
 ## Stack
 - Frontend: vanilla HTML/JS, single file index.html
