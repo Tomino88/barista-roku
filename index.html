@@ -210,6 +210,7 @@ table.rtbl tr:hover td{background:var(--accent-light);}
   <div id="scoreView" class="app">
     <div class="sidebar">
       <div class="sidebar-section" id="sidebarLabel">Semi-Finalists (0/18)</div>
+      <div id="sidebarTop"></div>
       <div id="competitorList"></div>
       <button class="add-btn" onclick="openAddModal()">+ Add Competitor</button>
     </div>
@@ -270,6 +271,8 @@ const SUPA_KEY='sb_publishable_ekXbKIfiSWnRcw8dcjsNCg_pH1OO5qs';
 const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
 
 let phase='semi',competitors=[],scoresCache={},scansCache={},selectedId=null,currentUser=null,saveTimeout=null,isDirty=false;
+const lastSelectedId={semi:null,final:null};
+let finalJudges=JSON.parse(localStorage.getItem('finalJudges')||'[0,1,2,3]');
 
 // ── SCORE STRUCTURE ──────────────────────────────────────────
 // WBC 2025 official maxima:
@@ -367,7 +370,8 @@ function calcTotal(comp){
   if(isDQ(sd.time))return{total:null,dq:true,tech:0,tc:0,ss:[0,0,0,0],st:0,pen:0};
   const pen=timePen(sd.time);
   const tr=techScore(sd);
-  const ss=sd.sensory.map(sj=>sensoryScore(sj).tot);
+  const activeIdx=fin?finalJudges:[0,1,2,3];
+  const ss=[0,1,2,3].map(j=>activeIdx.includes(j)?sensoryScore(sd.sensory[j]).tot:0);
   const stot=ss.reduce((a,b)=>a+b,0);
   const tc=fin?0:tr.tot*2;
   return{total:tc+stot-pen,dq:false,tech:tr.tot,tc,ss,st:stot,pen};
@@ -426,28 +430,114 @@ async function manualSave(){
 
 // ── PHASE ────────────────────────────────────────────────────
 function setPhase(p){
+  if(phase!=='ranking')lastSelectedId[phase]=selectedId;
   document.querySelectorAll('.phase-tab').forEach((t,i)=>t.classList.toggle('active',['semi','final','ranking'][i]===p));
-  phase=p;selectedId=null;
+  phase=p;
   if(p==='ranking'){
+    selectedId=null;
     document.getElementById('scoreView').classList.add('hidden');
     document.getElementById('rankingView').classList.remove('hidden');
     renderRankings();
   }else{
+    selectedId=lastSelectedId[p]||null;
     document.getElementById('scoreView').classList.remove('hidden');
     document.getElementById('rankingView').classList.add('hidden');
     renderSidebar();
-    document.getElementById('mainContent').innerHTML=`<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);flex-direction:column;gap:8px"><div style="font-family:'Bebas Neue',sans-serif;font-size:2rem;color:var(--border)">SELECT COMPETITOR</div><div style="font-size:.82rem">or add a new one below</div></div>`;
+    if(selectedId){renderScoresheet();}
+    else{showSelectPrompt();}
   }
+}
+function showSelectPrompt(){
+  const mc=document.getElementById('mainContent');
+  mc.textContent='';
+  const wrap=document.createElement('div');
+  wrap.style.cssText='display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);flex-direction:column;gap:8px';
+  const h=document.createElement('div');
+  h.style.cssText="font-family:'Bebas Neue',sans-serif;font-size:2rem;color:var(--border)";
+  h.textContent='SELECT COMPETITOR';
+  const s=document.createElement('div');
+  s.style.fontSize='.82rem';
+  s.textContent='or add a new one below';
+  wrap.appendChild(h);wrap.appendChild(s);mc.appendChild(wrap);
 }
 
 // ── SIDEBAR ──────────────────────────────────────────────────
 function renderSidebar(){
   const list=document.getElementById('competitorList');
+  const top=document.getElementById('sidebarTop');
   const lbl=document.getElementById('sidebarLabel');
   const comps=competitors.filter(c=>c.phase===phase);
   const max=phase==='semi'?18:6;
   lbl.textContent=`${phase==='semi'?'Semi-Finalists':'Finalists'} (${comps.length}/${max})`;
   list.innerHTML='';
+
+  if(phase==='final'){
+    // Top 6 auto panel
+    const semi=competitors.filter(c=>c.phase==='semi')
+      .map(c=>({...c,r:calcTotal(c)})).filter(c=>!c.r.dq)
+      .sort((a,b)=>b.r.total-a.r.total).slice(0,6);
+    top.innerHTML='';
+    // Top 6 section
+    const t6wrap=document.createElement('div');
+    t6wrap.style.cssText='padding:.6rem 1rem .4rem;border-bottom:1.5px solid var(--border)';
+    const t6hdr=document.createElement('div');
+    t6hdr.style.cssText='font-size:.62rem;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:.4rem';
+    t6hdr.textContent='Top 6 — Semi-Final';
+    t6wrap.appendChild(t6hdr);
+    semi.forEach((c,i)=>{
+      const row=document.createElement('div');
+      row.style.cssText=`display:flex;align-items:center;gap:6px;padding:4px 0;${i<5?'border-bottom:1px solid #edf2f7':''}`;
+      const rank=document.createElement('span');
+      rank.style.cssText="font-family:'Bebas Neue',sans-serif;color:var(--muted);font-size:1rem;min-width:18px";
+      rank.textContent=i+1;
+      const info=document.createElement('div');
+      info.style.cssText='flex:1;min-width:0';
+      const nm=document.createElement('div');
+      nm.style.cssText='font-size:.8rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+      nm.textContent=c.name;
+      const sc=document.createElement('div');
+      sc.style.cssText="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--accent)";
+      sc.textContent=c.r.total.toFixed(1);
+      info.appendChild(nm);info.appendChild(sc);
+      const orderWrap=document.createElement('div');
+      orderWrap.style.cssText='display:flex;flex-direction:column;align-items:center;gap:1px';
+      const orderLbl=document.createElement('span');
+      orderLbl.style.cssText='font-size:.56rem;color:var(--muted);text-transform:uppercase';
+      orderLbl.textContent='Start';
+      const orderInp=document.createElement('input');
+      orderInp.type='number';orderInp.min='1';orderInp.max='6';
+      orderInp.style.cssText="width:34px;background:#fff;border:1.5px solid var(--border);border-radius:4px;text-align:center;font-family:'DM Mono',monospace;font-size:.78rem;padding:2px 0;color:var(--text)";
+      if(c.final_order)orderInp.value=c.final_order;else orderInp.placeholder='—';
+      orderInp.onchange=()=>saveFinalOrder(c.id,orderInp.value);
+      orderWrap.appendChild(orderLbl);orderWrap.appendChild(orderInp);
+      row.appendChild(rank);row.appendChild(info);row.appendChild(orderWrap);
+      t6wrap.appendChild(row);
+    });
+    top.appendChild(t6wrap);
+    // Judges config section
+    const jWrap=document.createElement('div');
+    jWrap.style.cssText='padding:.5rem 1rem;border-bottom:1.5px solid var(--border)';
+    const jHdr=document.createElement('div');
+    jHdr.style.cssText='font-size:.62rem;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:.35rem';
+    jHdr.textContent='Final Judges';
+    const jRow=document.createElement('div');
+    jRow.style.cssText='display:flex;gap:8px;flex-wrap:wrap';
+    ['S1','S2','S3','S4'].forEach((j,i)=>{
+      const lbl2=document.createElement('label');
+      lbl2.style.cssText='display:flex;align-items:center;gap:3px;font-size:.78rem;cursor:pointer;font-weight:600';
+      const cb=document.createElement('input');
+      cb.type='checkbox';cb.checked=finalJudges.includes(i);
+      cb.style.accentColor='var(--accent)';
+      cb.onchange=()=>toggleFinalJudge(i,cb.checked);
+      lbl2.appendChild(cb);lbl2.appendChild(document.createTextNode(' '+j));
+      jRow.appendChild(lbl2);
+    });
+    jWrap.appendChild(jHdr);jWrap.appendChild(jRow);
+    top.appendChild(jWrap);
+  }else{
+    top.innerHTML='';
+  }
+
   comps.forEach(c=>{
     const r=calcTotal(c);
     const d=document.createElement('div');
@@ -459,7 +549,7 @@ function renderSidebar(){
   });
 }
 
-async function selectComp(id){selectedId=id;renderSidebar();renderScoresheet();}
+async function selectComp(id){selectedId=id;lastSelectedId[phase]=id;renderSidebar();renderScoresheet();}
 
 // ── SCORESHEET ───────────────────────────────────────────────
 function renderScoresheet(){
@@ -469,7 +559,8 @@ function renderScoresheet(){
   const r=calcTotal(comp);
   const pen=timePen(sd.time),dq=isDQ(sd.time);
   const dqH=dq?`<span class="dq-badge">DISQUALIFIED</span>`:'';
-  const JL=['Judge 1','Judge 2','Judge 3','Judge 4'];
+  const activeJudgeIndices=fin?finalJudges:[0,1,2,3];
+  const JL=activeJudgeIndices.map(i=>`Judge ${i+1}`);
 
   const nc=(lbl,key,mn,mx,mult,ji,ml2)=>{
     const v=ji!==null?sd.sensory[ji][key]:sd[key];
@@ -487,8 +578,9 @@ function renderScoresheet(){
 
   // Sensory section — shows per-judge sub-total for that part
   const SS=(title,cls,maxP,partKey,rows)=>{
-    const pts=JL.map((_,j)=>{const sc=sensoryScore(sd.sensory[j]);return sc[partKey].toFixed(1);});
-    return`<div class="ss ${cls}"><div class="sh2"><span class="st2">${title}</span><span class="sv">${pts.join(' / ')}<span class="smx"> /${maxP}</span></span></div><div class="scroll-wrap"><div class="jc s4">${JL.map(l=>`<div class="jch">${l}</div>`).join('')}${rows.map(r=>[0,1,2,3].map(j=>r.yn?yc(r.l,r.k,j):nc(r.l,r.k,0,r.mx||6,r.mult,j,r.ml)).join('')).join('')}</div></div></div>`;
+    const pts=activeJudgeIndices.map(j=>{const sc=sensoryScore(sd.sensory[j]);return sc[partKey].toFixed(1);});
+    const cols=activeJudgeIndices.length;
+    return`<div class="ss ${cls}"><div class="sh2"><span class="st2">${title}</span><span class="sv">${pts.join(' / ')}<span class="smx"> /${maxP}</span></span></div><div class="scroll-wrap"><div class="jc s4" style="grid-template-columns:repeat(${cols},minmax(130px,1fr))">${JL.map(l=>`<div class="jch">${l}</div>`).join('')}${rows.map(r=>activeJudgeIndices.map(j=>r.yn?yc(r.l,r.k,j):nc(r.l,r.k,0,r.mx||6,r.mult,j,r.ml)).join('')).join('')}</div></div></div>`;
   };
 
   // Tech section — shows total for that part
@@ -537,7 +629,7 @@ function renderScoresheet(){
       <div style="display:flex;gap:1.25rem;flex-wrap:wrap;align-items:center">
         ${!fin?`<div class="bd"><div class="bdl">Tech (T1+T2)</div><div class="bdv">${r.tc.toFixed(1)}<span style="color:var(--muted);font-size:.68rem"> /142</span></div></div>`:''}
         <div class="bd"><div class="bdl">Sensory Total</div><div class="bdv">${r.st.toFixed(1)}<span style="color:var(--muted);font-size:.68rem"> /712</span></div></div>
-        ${[0,1,2,3].map(j=>`<div class="bd"><div class="bdl">S${j+1}</div><div class="bdv" style="font-size:.85rem">${r.ss[j].toFixed(1)}</div></div>`).join('')}
+        ${activeJudgeIndices.map(j=>`<div class="bd"><div class="bdl">S${j+1}</div><div class="bdv" style="font-size:.85rem">${r.ss[j].toFixed(1)}</div></div>`).join('')}
         ${r.pen>0?`<div class="bd"><div class="bdl">Penalty</div><div class="bdv" style="color:var(--danger)">−${r.pen}</div></div>`:''}
       </div>
       <div style="text-align:right">
@@ -623,6 +715,23 @@ async function sendToCompetitor(compId){
   });
   if(res.ok){toast('Email sent ✓','ok');}
   else{const t=await res.text();toast(`Send failed: ${t}`,'err');}
+}
+
+// ── FINAL HELPERS ────────────────────────────────────────────
+function toggleFinalJudge(idx,active){
+  if(active){if(!finalJudges.includes(idx))finalJudges.push(idx);}
+  else{finalJudges=finalJudges.filter(j=>j!==idx);}
+  finalJudges.sort();
+  localStorage.setItem('finalJudges',JSON.stringify(finalJudges));
+  renderSidebar();if(selectedId)renderScoresheet();
+}
+async function saveFinalOrder(compId,value){
+  const order=value?parseInt(value):null;
+  const{error}=await sb.from('competitors').update({final_order:order}).eq('id',compId);
+  if(error){toast('Save error','err');return;}
+  const comp=competitors.find(c=>c.id===compId);
+  if(comp)comp.final_order=order;
+  toast('Order saved ✓','ok');
 }
 
 // ── COMPETITORS ──────────────────────────────────────────────

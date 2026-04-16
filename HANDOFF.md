@@ -60,7 +60,10 @@ Scorekeeping appka pro Czech Barista Championship 2026.
 ## TODO před soutěží
 - [ ] Přiřadit soutěžící do Tým 1/2/3 podle rozpisu judžů — SQL UPDATE těsně před soutěží:
       UPDATE competitors SET team = 'X' WHERE name = 'Jméno';
-- [ ] Přidat finalisty po semifinále (phase='final')
+- [ ] Spustit v Supabase SQL editoru pro final_order sloupec:
+      ALTER TABLE competitors ADD COLUMN IF NOT EXISTS final_order int;
+- [ ] Finalisté: záložka Finál auto-zobrazí top 6 ze semi. Ručně přiřadit startovní pořadí 1–6.
+      Případně přidat finalisty jako nové záznamy (phase='final') přes tlačítko "+ Add Competitor".
 
 ## Hotovo
 - [x] Všech 17 soutěžících vloženo do databáze přes Supabase SQL editor (2026-04-16)
