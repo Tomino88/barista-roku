@@ -87,9 +87,11 @@ Scorekeeping appka pro Czech Barista Championship 2026.
 ## Features (implementováno)
 - Přihlášení přes Supabase Auth (email + heslo)
 - Sidebar semi/final: soutěžící seřazeni podle start_order, zobrazeno číslo startu
-- Záložka Final: auto top-6 ze semi (seřazeno dle skóre) + start order input (final_order, DB) + judges checkboxy (S1–S4, localStorage)
-- Scoring: sensory (4 judges) + tech (T1+T2 mirror) v obou záložkách semi i final
-- Výpočet skóre: running total, ×násobek kalkulace pod inputem, time penalty, DQ
+- Záložka Final: auto top-6 ze semi (klikatelné, scoresheet dostupný) + start order input (final_order, DB) + judges checkboxy T1/T2/S1–S4 (localStorage)
+- Záložka Final: pořadí top-6 dle final_order (nebo skóre), top 3 zvýrazněni medailemi (🥇🥈🥉) + barevné pozadí řádku
+- Záložka Final: fin detekce podle aktivní záložky (ne phase v DB) → finalisté ze semi mají správnou final judges konfiguraci
+- Scoring: sensory (4 judges) + tech (T1+T2 mirror) v obou záložkách semi i final; T1/T2 konfigurovatelné ve Final Judges
+- Výpočet skóre: running total, ×násobek kalkulace vždy viditelná (i pro prázdná pole), time penalty, DQ
 - Head Judge: input v scoresheet (localStorage), zobrazí se v HJ Summary panelu
 - HJ Summary panel: T1, T2, S1–S4, celkový součet
 - Scans: upload (jpg/png/pdf), download, delete; Send to competitor (Resend email se signed URLs)
@@ -104,6 +106,10 @@ Scorekeeping appka pro Czech Barista Championship 2026.
 - [x] Email funkce + Edit modal (2026-04-16)
 - [x] Auto-finalisté panel, position memory, final judges config (2026-04-16)
 - [x] start_order řazení, Total Impression ×2, tech judges ve finále, Head Judge input (2026-04-16)
+- [x] T1/T2 checkboxy v Final Judges sekci, finalTechJudges localStorage (2026-04-16)
+- [x] Multiplier kalkulace vždy viditelná u všech soutěžících v semi (2026-04-16)
+- [x] Finalisté (top-6 ze semi) klikatelní v Final sidebaru, scoresheet dostupný (2026-04-16)
+- [x] Medailové zvýraznění top 3 v Final sidebaru dle final_order nebo skóre (2026-04-16)
 
 ## Jak nasadit změny
 Jakákoliv změna v index.html → commit → push → Vercel auto-deploy.
