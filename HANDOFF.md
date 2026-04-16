@@ -65,6 +65,8 @@ Scorekeeping appka pro Czech Barista Championship 2026.
 ## Hotovo
 - [x] Všech 17 soutěžících vloženo do databáze přes Supabase SQL editor (2026-04-16)
 - [x] App funkční na https://barista-roku.vercel.app
+- [x] Email funkce: /api/send-email.js, pole email v Add/Edit modalu, tlačítko "Send to competitor" ve scans panelu (2026-04-16)
+- [x] Edit Competitor modal — úprava jména, emailu, týmu (2026-04-16)
 
 ## Jak nasadit změny
 Jakákoliv změna v index.html → commit → push → Vercel auto-deploy.
