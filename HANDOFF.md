@@ -35,7 +35,7 @@ Scorekeeping appka pro Czech Barista Championship 2026.
 - Technical per judge: I=6, II=17, III=22, IV=17, V=9 → max 71
 - Total Impression: ×2 (max /12 per judge) — odchylka od WBC 2025 (×4)
 - CB semi: 2 tech judges (mirror), 4 sensory judges → max 806
-- Final: bez tech judge, 4 sensory → max 664
+- Final: 2 tech judges (mirror), 4 sensory judges → max 806 (stejné jako semi)
 - Penalizace: 1 bod/sekunda nad 15:00, max 60, DQ při >16:00
 
 ## Soutěžící — semifinále (pořadí startu 18.04.2026)

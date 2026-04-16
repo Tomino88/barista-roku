@@ -279,7 +279,7 @@ let finalJudges=JSON.parse(localStorage.getItem('finalJudges')||'[0,1,2,3]');
 // Sensory per judge: I=49, II=33, III=42, IV=30, V=12 → 166
 // Technical per judge: I=6, II=17, III=22, IV=17, V=9 → 71
 // CB Semi: 2 tech judges (T2=T1 mirror), 4 sensory → max 806
-// Final: no tech, 4 sensory → max 664
+// Final: 2 tech judges (T2=T1 mirror), 4 sensory → max 806
 
 function emptyScoreData(){
   return{
@@ -373,7 +373,7 @@ function calcTotal(comp){
   const activeIdx=fin?finalJudges:[0,1,2,3];
   const ss=[0,1,2,3].map(j=>activeIdx.includes(j)?sensoryScore(sd.sensory[j]).tot:0);
   const stot=ss.reduce((a,b)=>a+b,0);
-  const tc=fin?0:tr.tot*2;
+  const tc=tr.tot*2;
   return{total:tc+stot-pen,dq:false,tech:tr.tot,tc,ss,st:stot,pen};
 }
 
@@ -591,15 +591,14 @@ function renderScoresheet(){
 
   // Tech section — shows total for that part
   const TS=(title,maxP,rows)=>{
-    if(fin)return'';
     return`<div class="ss st3"><div class="sh2"><span class="st2">${title}</span><span class="sv">T1 / T2 (mirror)<span class="smx"> /${maxP}</span></span></div><div class="jc t2"><div class="jch">Tech Judge 1</div><div class="jch">Tech Judge 2 (=T1)</div>${rows.map(r=>{const v=sd[r.k];const mir=r.yn?`<div class="sc"><div class="slbl">${r.l}</div><div style="text-align:center;padding:4px 0;font-size:.82rem">${v===1?'<span style="color:var(--ok);font-weight:700">✓ YES</span>':v===0?'<span style="color:var(--danger);font-weight:700">✗ NO</span>':'<span style="color:var(--muted)">—</span>'}</div></div>`:`<div class="sc"><div class="slbl">${r.l}</div><div style="color:var(--muted);font-family:\'DM Mono\',monospace;font-size:.9rem;text-align:center;padding:3px 0">${v!==null?v:'—'}</div></div>`;return(r.yn?yc(r.l,r.k,null):nc(r.l,r.k,0,r.mx||6,null,null))+mir;}).join('')}</div></div>`;
   };
 
   // HJ panel
   const tr2=techScore(sd);
   const ss2=sd.sensory.map(sj=>sensoryScore(sj).tot);
-  const hjT=fin?ss2.reduce((a,b)=>a+b,0)-pen:(tr2.tot*2)+ss2.reduce((a,b)=>a+b,0)-pen;
-  const HJ=`<div class="hj"><div class="hjh"><span class="hjt">Head Judge — Summary Scoresheet</span><span class="hjn">HJ scores do not count towards total. For reference when completing the HJ scoresheet.</span></div><div class="hjg">${!fin?`<div class="hjc"><div class="hjcl">Tech 1 /71</div><div class="hjcv">${tr2.tot.toFixed(1)}</div></div><div class="hjc"><div class="hjcl">Tech 2 (=T1) /71</div><div class="hjcv">${tr2.tot.toFixed(1)}</div></div>`:`<div class="hjc"><div class="hjcl">Tech</div><div class="hjcv" style="color:var(--muted)">N/A</div></div><div class="hjc"></div>`}${[0,1,2,3].map(j=>`<div class="hjc"><div class="hjcl">Sensory ${j+1} /178</div><div class="hjcv">${ss2[j].toFixed(1)}</div></div>`).join('')}</div><div class="hjf"><div><div class="hjfm">${!fin?'T1 + T2 + S1 + S2 + S3 + S4 − time penalty':'S1 + S2 + S3 + S4 − time penalty'}</div>${pen>0?`<div style="font-size:.72rem;color:var(--danger);margin-top:3px">Penalty: −${pen} pts${dq?' | DISQUALIFIED':''}</div>`:''}</div><div style="text-align:right"><div class="hjfs">${dq?'DQ':hjT.toFixed(1)}</div><div style="font-size:.68rem;color:var(--muted)">TOTAL SCORE</div></div></div></div>`;
+  const hjT=(tr2.tot*2)+ss2.reduce((a,b)=>a+b,0)-pen;
+  const HJ=`<div class="hj"><div class="hjh"><span class="hjt">Head Judge — Summary Scoresheet</span><span class="hjn">HJ scores do not count towards total. For reference when completing the HJ scoresheet.</span></div><div class="hjg"><div class="hjc"><div class="hjcl">Tech 1 /71</div><div class="hjcv">${tr2.tot.toFixed(1)}</div></div><div class="hjc"><div class="hjcl">Tech 2 (=T1) /71</div><div class="hjcv">${tr2.tot.toFixed(1)}</div></div>${[0,1,2,3].map(j=>`<div class="hjc"><div class="hjcl">Sensory ${j+1} /166</div><div class="hjcv">${ss2[j].toFixed(1)}</div></div>`).join('')}</div><div class="hjf"><div><div class="hjfm">T1 + T2 + S1 + S2 + S3 + S4 − time penalty</div>${pen>0?`<div style="font-size:.72rem;color:var(--danger);margin-top:3px">Penalty: −${pen} pts${dq?' | DISQUALIFIED':''}</div>`:''}</div><div style="text-align:right"><div class="hjfs">${dq?'DQ':hjT.toFixed(1)}</div><div style="font-size:.68rem;color:var(--muted)">TOTAL SCORE</div></div></div></div>`;
 
   // Scans
   const scans=scansCache[comp.id]||[];
@@ -633,7 +632,7 @@ function renderScoresheet(){
     </div>
     <div class="total-bar">
       <div style="display:flex;gap:1.25rem;flex-wrap:wrap;align-items:center">
-        ${!fin?`<div class="bd"><div class="bdl">Tech (T1+T2)</div><div class="bdv">${r.tc.toFixed(1)}<span style="color:var(--muted);font-size:.68rem"> /142</span></div></div>`:''}
+        <div class="bd"><div class="bdl">Tech (T1+T2)</div><div class="bdv">${r.tc.toFixed(1)}<span style="color:var(--muted);font-size:.68rem"> /142</span></div></div>
         <div class="bd"><div class="bdl">Sensory Total</div><div class="bdv">${r.st.toFixed(1)}<span style="color:var(--muted);font-size:.68rem"> /712</span></div></div>
         ${activeJudgeIndices.map(j=>`<div class="bd"><div class="bdl">S${j+1}</div><div class="bdv" style="font-size:.85rem">${r.ss[j].toFixed(1)}</div></div>`).join('')}
         ${r.pen>0?`<div class="bd"><div class="bdl">Penalty</div><div class="bdv" style="color:var(--danger)">−${r.pen}</div></div>`:''}
