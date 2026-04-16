@@ -244,6 +244,24 @@ table.rtbl tr:hover td{background:var(--accent-light);}
   </div>
 </div>
 
+<div class="mo hidden" id="editModal">
+  <div class="md">
+    <h3>Edit Competitor</h3>
+    <input type="hidden" id="editModalId"/>
+    <div class="mdf"><label class="mdl">Name</label><input class="mdi" id="editModalName" placeholder="First Last"/></div>
+    <div class="mdf"><label class="mdl">Email (optional)</label><input class="mdi" id="editModalEmail" type="email" placeholder="competitor@email.com"/></div>
+    <div class="mdf"><label class="mdl">Judge Team</label>
+      <select class="mdi" id="editModalTeam">
+        <option value="1">Team 1</option><option value="2">Team 2</option><option value="3">Team 3</option>
+      </select>
+    </div>
+    <div class="mda">
+      <button class="btn btn-g" onclick="closeModal('editModal')">Cancel</button>
+      <button class="btn btn-p" onclick="saveEditCompetitor()">Save</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -495,6 +513,7 @@ function renderScoresheet(){
       <div><div class="comp-title">${comp.name}${dqH}</div><div class="comp-sub">Team ${String(comp.team).replace(/^Tým\s*/i,'')} · ${fin?'Final':'Semi-Final'}</div></div>
       <div style="display:flex;gap:8px;align-items:center">
         <button id="saveBtn" class="btn btn-p${isDirty?' dirty':''}" onclick="manualSave()" style="font-weight:700">Save${isDirty?' •':''}</button>
+        <button class="btn btn-g btn-sm" onclick="openEditModal('${comp.id}')">Edit</button>
         <button class="btn btn-danger btn-sm" onclick="removeComp('${comp.id}')">Remove</button>
       </div>
     </div>
@@ -621,6 +640,28 @@ async function saveCompetitor(){
   await saveScores(data.id);
   closeModal('addModal');renderSidebar();
   toast(`${name} added ✓`,'ok');
+}
+function openEditModal(id){
+  const comp=competitors.find(c=>c.id===id);if(!comp)return;
+  document.getElementById('editModalId').value=comp.id;
+  document.getElementById('editModalName').value=comp.name;
+  document.getElementById('editModalEmail').value=comp.email||'';
+  document.getElementById('editModalTeam').value=String(comp.team).replace(/^Tým\s*/i,'');
+  document.getElementById('editModal').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('editModalName').focus(),100);
+}
+async function saveEditCompetitor(){
+  const id=document.getElementById('editModalId').value;
+  const name=document.getElementById('editModalName').value.trim();
+  const email=document.getElementById('editModalEmail').value.trim()||null;
+  const team=document.getElementById('editModalTeam').value;
+  if(!name)return;
+  const{error}=await sb.from('competitors').update({name,email,team}).eq('id',id);
+  if(error){toast('Save error','err');return;}
+  const comp=competitors.find(c=>c.id===id);
+  if(comp){comp.name=name;comp.email=email;comp.team=team;}
+  closeModal('editModal');renderSidebar();renderScoresheet();
+  toast(`${name} updated ✓`,'ok');
 }
 async function removeComp(id){
   if(!confirm('Remove competitor and all their data?'))return;
