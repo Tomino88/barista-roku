@@ -493,7 +493,8 @@ function renderSidebar(){
     t6wrap.appendChild(t6hdr);
     semi.forEach((c,i)=>{
       const row=document.createElement('div');
-      row.style.cssText=`display:flex;align-items:center;gap:6px;padding:4px 0;${i<5?'border-bottom:1px solid #edf2f7':''}`;
+      row.style.cssText=`display:flex;align-items:center;gap:6px;padding:4px 0;cursor:pointer;border-radius:6px;padding-left:4px;padding-right:4px;background:${c.id===selectedId?'var(--accent-light, #e8f4fd)':'transparent'};${i<5?'border-bottom:1px solid #edf2f7':''}`;
+      row.onclick=()=>selectComp(c.id);
       const rank=document.createElement('span');
       rank.style.cssText="font-family:'Bebas Neue',sans-serif;color:var(--muted);font-size:1rem;min-width:18px";
       rank.textContent=i+1;
@@ -515,6 +516,7 @@ function renderSidebar(){
       orderInp.type='number';orderInp.min='1';orderInp.max='6';
       orderInp.style.cssText="width:34px;background:#fff;border:1.5px solid var(--border);border-radius:4px;text-align:center;font-family:'DM Mono',monospace;font-size:.78rem;padding:2px 0;color:var(--text)";
       if(c.final_order)orderInp.value=c.final_order;else orderInp.placeholder='—';
+      orderInp.onclick=e=>e.stopPropagation();
       orderInp.onchange=()=>saveFinalOrder(c.id,orderInp.value);
       orderWrap.appendChild(orderLbl);orderWrap.appendChild(orderInp);
       row.appendChild(rank);row.appendChild(info);row.appendChild(orderWrap);
@@ -573,7 +575,7 @@ async function selectComp(id){selectedId=id;lastSelectedId[phase]=id;renderSideb
 function renderScoresheet(){
   const comp=competitors.find(c=>c.id===selectedId);
   if(!comp)return;
-  const sd=getScores(comp.id),fin=comp.phase==='final';
+  const sd=getScores(comp.id),fin=phase==='final';
   const r=calcTotal(comp);
   const pen=timePen(sd.time),dq=isDQ(sd.time);
   const dqH=dq?`<span class="dq-badge">DISQUALIFIED</span>`:'';
@@ -585,7 +587,8 @@ function renderScoresheet(){
     const dv=(v!==null&&v!=='')?v:'';
     const mh=mult?`<span class="smult"> ×${mult}</span>`:'';
     const mxh=ml2?`<span style="font-size:.58rem;color:var(--muted)"> /${ml2}</span>`:'';
-    const calc=(mult&&dv!=='')?`<div style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--accent);text-align:center;margin-top:2px">${dv} × ${mult} = ${(parseFloat(dv)*mult).toFixed(1).replace(/\.0$/,'')}</div>`:'';
+    const numVal=dv!==''?parseFloat(dv):0;
+    const calc=mult?`<div style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--accent);text-align:center;margin-top:2px">${numVal} × ${mult} = ${(numVal*mult).toFixed(1).replace(/\.0$/,'')}</div>`:'';
     return`<div class="sc"><div class="slbl">${lbl}${mh}${mxh}</div><input type="number" class="si" min="${mn}" max="${mx}" step=".5" value="${dv}" onchange="upd('${comp.id}','${key}',this.value,${ji!==null?ji:'null'})" onfocus="this.select()" placeholder="—"/>${calc}</div>`;
   };
   const yc=(lbl,key,ji)=>{
