@@ -49,8 +49,13 @@ Scorekeeping appka pro Czech Barista Championship 2026.
 17. Almaz Murat
 
 ## TODO před soutěží
-- [ ] Přiřadit soutěžící do Tým 1/2/3 podle rozpisu judžů
+- [ ] Přiřadit soutěžící do Tým 1/2/3 podle rozpisu judžů — SQL UPDATE těsně před soutěží:
+      UPDATE competitors SET team = 'X' WHERE name = 'Jméno';
 - [ ] Přidat finalisty po semifinále (phase='final')
+
+## Hotovo
+- [x] Všech 17 soutěžících vloženo do databáze přes Supabase SQL editor (2026-04-16)
+- [x] App funkční na https://barista-roku.vercel.app
 
 ## Jak nasadit změny
 Jakákoliv změna v index.html → commit → push → Vercel auto-deploy.
