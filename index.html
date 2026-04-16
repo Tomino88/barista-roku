@@ -273,6 +273,7 @@ const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
 let phase='semi',competitors=[],scoresCache={},scansCache={},selectedId=null,currentUser=null,saveTimeout=null,isDirty=false;
 const lastSelectedId={semi:null,final:null};
 let finalJudges=JSON.parse(localStorage.getItem('finalJudges')||'[0,1,2,3]');
+let finalTechJudges=JSON.parse(localStorage.getItem('finalTechJudges')||'[0,1]');
 let headJudgeName=localStorage.getItem('headJudgeName')||'';
 
 // ── SCORE STRUCTURE ──────────────────────────────────────────
@@ -374,7 +375,7 @@ function calcTotal(comp){
   const activeIdx=fin?finalJudges:[0,1,2,3];
   const ss=[0,1,2,3].map(j=>activeIdx.includes(j)?sensoryScore(sd.sensory[j]).tot:0);
   const stot=ss.reduce((a,b)=>a+b,0);
-  const tc=tr.tot*2;
+  const tc=tr.tot*(fin?finalTechJudges.length:2);
   return{total:tc+stot-pen,dq:false,tech:tr.tot,tc,ss,st:stot,pen};
 }
 
@@ -528,6 +529,16 @@ function renderSidebar(){
     jHdr.textContent='Final Judges';
     const jRow=document.createElement('div');
     jRow.style.cssText='display:flex;gap:8px;flex-wrap:wrap';
+    ['T1','T2'].forEach((j,i)=>{
+      const lbl2=document.createElement('label');
+      lbl2.style.cssText='display:flex;align-items:center;gap:3px;font-size:.78rem;cursor:pointer;font-weight:600';
+      const cb=document.createElement('input');
+      cb.type='checkbox';cb.checked=finalTechJudges.includes(i);
+      cb.style.accentColor='var(--accent)';
+      cb.onchange=()=>toggleFinalTechJudge(i,cb.checked);
+      lbl2.appendChild(cb);lbl2.appendChild(document.createTextNode(' '+j));
+      jRow.appendChild(lbl2);
+    });
     ['S1','S2','S3','S4'].forEach((j,i)=>{
       const lbl2=document.createElement('label');
       lbl2.style.cssText='display:flex;align-items:center;gap:3px;font-size:.78rem;cursor:pointer;font-weight:600';
@@ -725,6 +736,13 @@ async function sendToCompetitor(compId){
 }
 
 // ── FINAL HELPERS ────────────────────────────────────────────
+function toggleFinalTechJudge(idx,active){
+  if(active){if(!finalTechJudges.includes(idx))finalTechJudges.push(idx);}
+  else{finalTechJudges=finalTechJudges.filter(j=>j!==idx);}
+  finalTechJudges.sort();
+  localStorage.setItem('finalTechJudges',JSON.stringify(finalTechJudges));
+  renderSidebar();if(selectedId)renderScoresheet();
+}
 function toggleFinalJudge(idx,active){
   if(active){if(!finalJudges.includes(idx))finalJudges.push(idx);}
   else{finalJudges=finalJudges.filter(j=>j!==idx);}
