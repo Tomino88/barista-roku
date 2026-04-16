@@ -402,7 +402,7 @@ async function initApp(user){
 // ── DATA ─────────────────────────────────────────────────────
 async function loadAll(){
   const[compsRes,scoresRes,scansRes]=await Promise.all([
-    sb.from('competitors').select('*').order('created_at'),
+    sb.from('competitors').select('*').order('start_order',{ascending:true,nullsFirst:false}).order('created_at'),
     sb.from('scores').select('*'),
     sb.from('scans').select('*').order('uploaded_at'),
   ]);
@@ -466,7 +466,12 @@ function renderSidebar(){
   const list=document.getElementById('competitorList');
   const top=document.getElementById('sidebarTop');
   const lbl=document.getElementById('sidebarLabel');
-  const comps=competitors.filter(c=>c.phase===phase);
+  const comps=competitors.filter(c=>c.phase===phase)
+    .sort((a,b)=>{
+      const ao=a.start_order!=null?a.start_order:9999;
+      const bo=b.start_order!=null?b.start_order:9999;
+      return ao!==bo?ao-bo:0;
+    });
   const max=phase==='semi'?18:6;
   lbl.textContent=`${phase==='semi'?'Semi-Finalists':'Finalists'} (${comps.length}/${max})`;
   list.innerHTML='';
@@ -544,7 +549,8 @@ function renderSidebar(){
     d.className='ci'+(c.id===selectedId?' active':'');
     d.onclick=()=>selectComp(c.id);
     const sc=r.dq?'<span class="ci-score dq">DQ</span>':`<span class="ci-score">${r.total.toFixed(1)}</span>`;
-    d.innerHTML=`<div><div class="ci-name">${c.name}</div><div style="font-size:.68rem;color:var(--muted)">Team ${String(c.team).replace(/^Tým\s*/i,'')}</div></div>${sc}`;
+    const num=c.start_order!=null?`<span style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);min-width:18px;display:inline-block">${c.start_order}.</span> `:'';
+    d.innerHTML=`<div><div class="ci-name">${num}${c.name}</div><div style="font-size:.68rem;color:var(--muted)">Team ${String(c.team).replace(/^Tým\s*/i,'')}</div></div>${sc}`;
     list.appendChild(d);
   });
 }
