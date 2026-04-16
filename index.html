@@ -275,11 +275,11 @@ const lastSelectedId={semi:null,final:null};
 let finalJudges=JSON.parse(localStorage.getItem('finalJudges')||'[0,1,2,3]');
 
 // ── SCORE STRUCTURE ──────────────────────────────────────────
-// WBC 2025 official maxima:
-// Sensory per judge: I=49, II=33, III=42, IV=30, V=24 → 178
+// CBC 2026 scoring:
+// Sensory per judge: I=49, II=33, III=42, IV=30, V=12 → 166
 // Technical per judge: I=6, II=17, III=22, IV=17, V=9 → 71
-// CB Semi: 2 tech judges (T2=T1 mirror), 4 sensory → max 854
-// Final: no tech, 4 sensory → max 712
+// CB Semi: 2 tech judges (T2=T1 mirror), 4 sensory → max 806
+// Final: no tech, 4 sensory → max 664
 
 function emptyScoreData(){
   return{
@@ -333,8 +333,8 @@ function sensoryScore(sj){
   const p4=(fv0(sj.s_attention)*2)
     +(fv0(sj.s_presentation)*3)
     +(fv0(sj.s_coffee_knowledge)*2);
-  // Part V — Total Impression (max 24, ×4 WBC 2025)
-  const p5=(fv0(sj.s_total_impression)*4);
+  // Part V — Total Impression (max 12, ×2 CBC 2026)
+  const p5=(fv0(sj.s_total_impression)*2);
   return{p1,p2,p3,p4,p5,tot:p1+p2+p3+p4+p5};
 }
 
@@ -629,7 +629,7 @@ function renderScoresheet(){
       ${SS('SENSORY II — Milk Beverage','sm2',33,'p2',[{l:'Visual Appeal',k:'s_milk_visual',mx:3,ml:'3'},{l:'Accuracy of Taste Descriptors',k:'s_milk_taste_desc',mult:4,mx:3,ml:'12'},{l:'Taste Experience',k:'s_milk_taste_exp',mult:3,mx:6,ml:'18'}])}
       ${SS('SENSORY III — Signature Beverage','ss2',42,'p3',[{l:'Accuracy of Taste Descriptors',k:'s_sig_acc_taste',mult:4,mx:3,ml:'12'},{l:'Well Explained, Introduced & Prepared',k:'s_sig_well_explained',mult:2,mx:6,ml:'12'},{l:'Taste Experience',k:'s_sig_taste_exp',mult:3,mx:6,ml:'18'}])}
       ${SS('SENSORY IV — Barista Evaluation','sb',30,'p4',[{l:'Attention to Details / All Accessories',k:'s_attention',mult:2,mx:3,ml:'6'},{l:'Presentation',k:'s_presentation',mult:3,mx:6,ml:'18'},{l:'Coffee Knowledge / Use of Equipment & Space',k:'s_coffee_knowledge',mult:2,mx:3,ml:'6'}])}
-      ${SS('SENSORY V — Judges Total Impression','sb fw',24,'p5',[{l:'Total Impression',k:'s_total_impression',mult:4,mx:6,ml:'24'}])}
+      ${SS('SENSORY V — Judges Total Impression','sb fw',12,'p5',[{l:'Total Impression',k:'s_total_impression',mult:2,mx:6,ml:'12'}])}
     </div>
     <div class="total-bar">
       <div style="display:flex;gap:1.25rem;flex-wrap:wrap;align-items:center">
