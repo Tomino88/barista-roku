@@ -12,10 +12,8 @@ Scorekeeping appka pro Czech Barista Championship 2026.
 ## Supabase
 - URL: https://cggujadkrrrbeuuxitmm.supabase.co
 - Publishable key: sb_publishable_ekXbKIfiSWnRcw8dcjsNCg_pH1OO5qs
-- Tabulky: competitors (+ sloupec email), scores, scans
+- Tabulky: competitors (sloupce: id, name, email, team, phase, start_order, final_order, created_at), scores, scans
 - Storage bucket: scans (max 10MB, jpg/png/pdf)
-- SQL pro přidání email sloupce (spustit jednou v SQL editoru):
-  ALTER TABLE competitors ADD COLUMN IF NOT EXISTS email text;
 
 ## Email (Resend)
 - Edge function: /api/send-email.js
@@ -86,11 +84,26 @@ Scorekeeping appka pro Czech Barista Championship 2026.
 - [ ] Finalisté: záložka Finál auto-zobrazí top 6 ze semi. Ručně přiřadit startovní pořadí 1–6.
       Případně přidat finalisty jako nové záznamy (phase='final') přes tlačítko "+ Add Competitor".
 
-## Hotovo
-- [x] Všech 17 soutěžících vloženo do databáze přes Supabase SQL editor (2026-04-16)
+## Features (implementováno)
+- Přihlášení přes Supabase Auth (email + heslo)
+- Sidebar semi/final: soutěžící seřazeni podle start_order, zobrazeno číslo startu
+- Záložka Final: auto top-6 ze semi (seřazeno dle skóre) + start order input (final_order, DB) + judges checkboxy (S1–S4, localStorage)
+- Scoring: sensory (4 judges) + tech (T1+T2 mirror) v obou záložkách semi i final
+- Výpočet skóre: running total, ×násobek kalkulace pod inputem, time penalty, DQ
+- Head Judge: input v scoresheet (localStorage), zobrazí se v HJ Summary panelu
+- HJ Summary panel: T1, T2, S1–S4, celkový součet
+- Scans: upload (jpg/png/pdf), download, delete; Send to competitor (Resend email se signed URLs)
+- Edit Competitor modal: jméno, email, tým
+- Pamatování pozice: přepnutí záložek obnoví posledního vybraného soutěžícího
+- Results záložka: ranking semi + final, top-6 označeni FINALIST
+- Toast notifikace, manual Save tlačítko
+
+## Hotovo (chronologicky)
+- [x] Všech 17 soutěžících vloženo do databáze (2026-04-16)
 - [x] App funkční na https://barista-roku.vercel.app
-- [x] Email funkce: /api/send-email.js, pole email v Add/Edit modalu, tlačítko "Send to competitor" ve scans panelu (2026-04-16)
-- [x] Edit Competitor modal — úprava jména, emailu, týmu (2026-04-16)
+- [x] Email funkce + Edit modal (2026-04-16)
+- [x] Auto-finalisté panel, position memory, final judges config (2026-04-16)
+- [x] start_order řazení, Total Impression ×2, tech judges ve finále, Head Judge input (2026-04-16)
 
 ## Jak nasadit změny
 Jakákoliv změna v index.html → commit → push → Vercel auto-deploy.
