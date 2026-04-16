@@ -402,7 +402,7 @@ async function initApp(user){
 // ── DATA ─────────────────────────────────────────────────────
 async function loadAll(){
   const[compsRes,scoresRes,scansRes]=await Promise.all([
-    sb.from('competitors').select('*').order('start_order',{ascending:true,nullsFirst:false}).order('created_at'),
+    sb.from('competitors').select('*').order('created_at'),
     sb.from('scores').select('*'),
     sb.from('scans').select('*').order('uploaded_at'),
   ]);
