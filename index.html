@@ -429,6 +429,12 @@ async function saveScores(compId){
 async function manualSave(){
   if(selectedId)await saveScores(selectedId);
 }
+async function resetScore(compId){
+  if(!confirm('Reset all scores for this competitor to zero?'))return;
+  scoresCache[compId]=emptyScoreData();
+  await saveScores(compId);
+  renderSidebar();renderScoresheet();
+}
 
 // ── PHASE ────────────────────────────────────────────────────
 function setPhase(p){
@@ -630,6 +636,7 @@ function renderScoresheet(){
       <div style="display:flex;gap:8px;align-items:center">
         <button id="saveBtn" class="btn btn-p${isDirty?' dirty':''}" onclick="manualSave()" style="font-weight:700">Save${isDirty?' •':''}</button>
         <button class="btn btn-g btn-sm" onclick="openEditModal('${comp.id}')">Edit</button>
+        <button class="btn btn-g btn-sm" onclick="resetScore('${comp.id}')" style="color:#e65100;border-color:#ffccbc;" title="Reset all scores to zero">Reset</button>
         <button class="btn btn-danger btn-sm" onclick="removeComp('${comp.id}')">Remove</button>
       </div>
     </div>
