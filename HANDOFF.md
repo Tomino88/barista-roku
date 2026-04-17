@@ -218,6 +218,8 @@ INSERT INTO judges (name, role, team, phase) VALUES
 - [x] /api/results zabezpečen Bearer tokenem (RESULTS_API_TOKEN) (2026-04-17)
 - [x] Judges tabulka + dynamická jména v scoresheet (sensory/tech dle týmu) (2026-04-17)
 - [x] Junior judges (Sandy/Viktoria tech, Kamila/Eliška sensory) — phase-aware lookup (2026-04-17)
+- [x] Tech team derivován z start_order (liché=blue/Peter+Milosz, sudé=purple/Adam+Daniel) (2026-04-17)
+- [x] Head Judge jméno načteno z DB (judges.role='head') — read-only, dle comp.team (2026-04-17)
 
 ## Jak nasadit změny
 Jakákoliv změna v index.html → commit → push → Vercel auto-deploy.

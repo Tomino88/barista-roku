@@ -428,6 +428,11 @@ function getTechJudgeNames(tech_team,ph){
   const js=judgesCache.filter(j=>j.role==='technical'&&j.phase!=='junior'&&j.team===(tech_team||'blue')).sort((a,b)=>a.name.localeCompare(b.name));
   return[js[0]?.name||'T1',js[1]?.name||'T2'];
 }
+function getHeadJudgeName(team,ph){
+  if(ph==='junior'){const j=judgesCache.find(j=>j.role==='head'&&j.phase==='junior');return j?j.name:'';}
+  const j=judgesCache.find(j=>j.role==='head'&&j.phase!=='junior'&&String(j.team)===String(team));
+  return j?j.name:'';
+}
 
 // ── AUTH ─────────────────────────────────────────────────────
 async function doLogin(){
@@ -672,7 +677,8 @@ function renderScoresheet(){
   const dqH=dq?`<span class="dq-badge">DISQUALIFIED</span>`:'';
   const activeJudgeIndices=fin?finalJudges:jun?juniorSensoryJudges:[0,1,2,3];
   const sJudgeNames=getSensoryJudgeNames(comp.team,phase);
-  const tJudgeNames=getTechJudgeNames(comp.tech_team,phase);
+  const effectiveTechTeam=(!jun&&comp.start_order!=null)?(comp.start_order%2===1?'blue':'purple'):(comp.tech_team||'blue');
+  const tJudgeNames=getTechJudgeNames(effectiveTechTeam,phase);
   const JL=activeJudgeIndices.map(i=>sJudgeNames[i]||'Judge '+(i+1));
 
   const nc=(lbl,key,mn,mx,mult,ji,ml2)=>{
@@ -710,7 +716,8 @@ function renderScoresheet(){
   const hjSensoryMax=jun?88:166;
   const hjSensoryJudges=jun?[0,1]:[0,1,2,3];
   const hjFormula=jun?'T1 + T2 + S1 + S2 − time penalty':'T1 + T2 + S1 + S2 + S3 + S4 − time penalty';
-  const HJ=`<div class="hj"><div class="hjh"><span class="hjt">Head Judge — Summary Scoresheet${headJudgeName?` · ${headJudgeName}`:''}</span><span class="hjn">HJ scores do not count towards total. For reference when completing the HJ scoresheet.</span></div><div class="hjg"><div class="hjc"><div class="hjcl">Tech 1 /71</div><div class="hjcv">${tr2.tot.toFixed(1)}</div></div><div class="hjc"><div class="hjcl">Tech 2 (=T1) /71</div><div class="hjcv">${tr2.tot.toFixed(1)}</div></div>${hjSensoryJudges.map(j=>`<div class="hjc"><div class="hjcl">Sensory ${j+1} /${hjSensoryMax}</div><div class="hjcv">${ss2[j].toFixed(1)}</div></div>`).join('')}</div><div class="hjf"><div><div class="hjfm">${hjFormula}</div>${pen>0?`<div style="font-size:.72rem;color:var(--danger);margin-top:3px">Penalty: −${pen} pts${dq?' | DISQUALIFIED':''}</div>`:''}</div><div style="text-align:right"><div class="hjfs">${dq?'DQ':hjT.toFixed(1)}</div><div style="font-size:.68rem;color:var(--muted)">TOTAL SCORE</div></div></div></div>`;
+  const hjName=getHeadJudgeName(comp.team,phase);
+  const HJ=`<div class="hj"><div class="hjh"><span class="hjt">Head Judge — Summary Scoresheet${hjName?` · ${hjName}`:''}</span><span class="hjn">HJ scores do not count towards total. For reference when completing the HJ scoresheet.</span></div><div class="hjg"><div class="hjc"><div class="hjcl">Tech 1 /71</div><div class="hjcv">${tr2.tot.toFixed(1)}</div></div><div class="hjc"><div class="hjcl">Tech 2 (=T1) /71</div><div class="hjcv">${tr2.tot.toFixed(1)}</div></div>${hjSensoryJudges.map(j=>`<div class="hjc"><div class="hjcl">Sensory ${j+1} /${hjSensoryMax}</div><div class="hjcv">${ss2[j].toFixed(1)}</div></div>`).join('')}</div><div class="hjf"><div><div class="hjfm">${hjFormula}</div>${pen>0?`<div style="font-size:.72rem;color:var(--danger);margin-top:3px">Penalty: −${pen} pts${dq?' | DISQUALIFIED':''}</div>`:''}</div><div style="text-align:right"><div class="hjfs">${dq?'DQ':hjT.toFixed(1)}</div><div style="font-size:.68rem;color:var(--muted)">TOTAL SCORE</div></div></div></div>`;
 
   // Scans
   const scans=scansCache[comp.id]||[];
@@ -730,7 +737,7 @@ function renderScoresheet(){
     <div class="meta-row">
       <div class="mf"><div class="ml">Competition Time (mm:ss)</div><input class="mi" type="text" placeholder="14:35" value="${sd.time||''}" onchange="upd('${comp.id}','time',this.value,null)" pattern="\\d{1,2}:\\d{2}"/></div>
       <div class="mf"><div class="ml">Time Penalty</div><div style="padding:7px 0;font-family:'DM Mono',monospace;font-size:.95rem;color:${pen>0?'var(--danger)':'var(--ok)'};">${pen>0?`−${pen} pts`:dq?'<span style="color:var(--danger)">DQ (&gt;16:00)</span>':'0 pts'}</div></div>
-      <div class="mf"><div class="ml">Head Judge</div><input class="mi" type="text" placeholder="Name" value="${headJudgeName}" onchange="headJudgeName=this.value;localStorage.setItem('headJudgeName',this.value)" style="width:160px"/></div>
+      <div class="mf"><div class="ml">Head Judge</div><div style="padding:7px 0;font-family:'DM Mono',monospace;font-size:.95rem;color:var(--text);min-width:120px">${getHeadJudgeName(comp.team,phase)||'—'}</div></div>
     </div>
     <div class="sections-grid">
       ${TS('TECH I — Station at Start-Up',6,[{l:'Clean Working Area / Clean Cloths',k:'t_clean_start',mx:6}])}
