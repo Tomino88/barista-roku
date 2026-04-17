@@ -226,6 +226,7 @@ INSERT INTO judges (name, role, team, phase) VALUES
 - [x] sensorTeam() derivuje tým ze start_order ((start_order-1)%3+1) — nezávislé na DB (2026-04-17)
 - [x] Sidebar + scoresheet používají sensorTeam() pro judge lookup i display (2026-04-17)
 - [x] Final scoresheet: anonymní judži S1–S4/T1–T2 (DB judges pro finále TBD); HJ jako volný input (2026-04-17)
+- [x] Semi sensory pořadí S1–S4 hardcodováno v JS (SEMI_SENSORY_ORDER) — T1:Eliška/Tereza/Tiaran/Valeria, T2:Dominik/Elizaveta/Aiste/Tomo Pavlov, T3:Nikola/Kamila/Joanna/Alesya (2026-04-17)
 
 ## Jak nasadit změny
 Jakákoliv změna v index.html → commit → push → Vercel auto-deploy.
