@@ -15,6 +15,11 @@ Scorekeeping appka pro Czech Barista Championship 2026.
 - Tabulky: competitors (sloupce: id, name, email, team, phase, start_order, final_order, created_at), scores, scans
 - Storage bucket: scans (max 10MB, jpg/png/pdf)
 
+## Public API
+- Endpoint: https://barista-roku.vercel.app/api/results
+- Bez autentizace, CORS *, vrací JSON s průběžnými výsledky semi + final
+- Semi: seřazeno dle skóre (fallback start_order), Final: dle final_order (fallback skóre) + medal (gold/silver/bronze)
+
 ## Email (Resend)
 - Edge function: /api/send-email.js
 - From: noreply@uctotom.cz
