@@ -239,6 +239,11 @@ table.rtbl tr:hover td{background:var(--accent-light);}
         <option value="1">Team 1</option><option value="2">Team 2</option><option value="3">Team 3</option>
       </select>
     </div>
+    <div class="mdf"><label class="mdl">Tech Team</label>
+      <select class="mdi" id="modalTechTeam">
+        <option value="blue">Blue</option><option value="purple">Purple</option>
+      </select>
+    </div>
     <div class="mda">
       <button class="btn btn-g" onclick="closeModal('addModal')">Cancel</button>
       <button class="btn btn-p" onclick="saveCompetitor()">Save</button>
@@ -257,6 +262,11 @@ table.rtbl tr:hover td{background:var(--accent-light);}
         <option value="1">Team 1</option><option value="2">Team 2</option><option value="3">Team 3</option>
       </select>
     </div>
+    <div class="mdf"><label class="mdl">Tech Team</label>
+      <select class="mdi" id="editModalTechTeam">
+        <option value="blue">Blue</option><option value="purple">Purple</option>
+      </select>
+    </div>
     <div class="mda">
       <button class="btn btn-g" onclick="closeModal('editModal')">Cancel</button>
       <button class="btn btn-p" onclick="saveEditCompetitor()">Save</button>
@@ -271,7 +281,7 @@ const SUPA_URL='https://cggujadkrrrbeuuxitmm.supabase.co';
 const SUPA_KEY='sb_publishable_ekXbKIfiSWnRcw8dcjsNCg_pH1OO5qs';
 const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
 
-let phase='semi',competitors=[],scoresCache={},scansCache={},selectedId=null,currentUser=null,saveTimeout=null,isDirty=false;
+let phase='semi',competitors=[],scoresCache={},scansCache={},judgesCache=[],selectedId=null,currentUser=null,saveTimeout=null,isDirty=false;
 const lastSelectedId={semi:null,final:null,junior:null};
 let finalJudges=JSON.parse(localStorage.getItem('finalJudges')||'[0,1,2,3]');
 let finalTechJudges=JSON.parse(localStorage.getItem('finalTechJudges')||'[0,1]');
@@ -404,6 +414,14 @@ function calcTotal(comp){
 
 function getScores(id){return scoresCache[id]||emptyScoreData();}
 
+function getSensoryJudgeNames(team){
+  return judgesCache.filter(j=>j.role==='sensory'&&String(j.team)===String(team)).sort((a,b)=>a.name.localeCompare(b.name)).map(j=>j.name);
+}
+function getTechJudgeNames(tech_team){
+  const js=judgesCache.filter(j=>j.role==='technical'&&j.team===(tech_team||'blue')).sort((a,b)=>a.name.localeCompare(b.name));
+  return[js[0]?.name||'T1',js[1]?.name||'T2'];
+}
+
 // ── AUTH ─────────────────────────────────────────────────────
 async function doLogin(){
   const email=document.getElementById('loginEmail').value.trim();
@@ -426,10 +444,11 @@ async function initApp(user){
 
 // ── DATA ─────────────────────────────────────────────────────
 async function loadAll(){
-  const[compsRes,scoresRes,scansRes]=await Promise.all([
+  const[compsRes,scoresRes,scansRes,judgesRes]=await Promise.all([
     sb.from('competitors').select('*').order('created_at'),
     sb.from('scores').select('*'),
     sb.from('scans').select('*').order('uploaded_at'),
+    sb.from('judges').select('*'),
   ]);
   competitors=compsRes.data||[];
   scoresCache={};
@@ -439,6 +458,7 @@ async function loadAll(){
     if(!scansCache[r.competitor_id])scansCache[r.competitor_id]=[];
     scansCache[r.competitor_id].push(r);
   });
+  judgesCache=judgesRes.data||[];
 }
 
 async function saveScores(compId){
@@ -644,7 +664,9 @@ function renderScoresheet(){
   const pen=timePen(sd.time),dq=isDQ(sd.time);
   const dqH=dq?`<span class="dq-badge">DISQUALIFIED</span>`:'';
   const activeJudgeIndices=fin?finalJudges:jun?juniorSensoryJudges:[0,1,2,3];
-  const JL=activeJudgeIndices.map(i=>`Judge ${i+1}`);
+  const sJudgeNames=getSensoryJudgeNames(comp.team);
+  const tJudgeNames=getTechJudgeNames(comp.tech_team);
+  const JL=activeJudgeIndices.map(i=>sJudgeNames[i]||'Judge '+(i+1));
 
   const nc=(lbl,key,mn,mx,mult,ji,ml2)=>{
     const v=ji!==null?sd.sensory[ji][key]:sd[key];
@@ -671,7 +693,7 @@ function renderScoresheet(){
 
   // Tech section — shows total for that part
   const TS=(title,maxP,rows)=>{
-    return`<div class="ss st3"><div class="sh2"><span class="st2">${title}</span><span class="sv">T1 / T2 (mirror)<span class="smx"> /${maxP}</span></span></div><div class="jc t2"><div class="jch">Tech Judge 1</div><div class="jch">Tech Judge 2 (=T1)</div>${rows.map(r=>{const v=sd[r.k];const mir=r.yn?`<div class="sc"><div class="slbl">${r.l}</div><div style="text-align:center;padding:4px 0;font-size:.82rem">${v===1?'<span style="color:var(--ok);font-weight:700">✓ YES</span>':v===0?'<span style="color:var(--danger);font-weight:700">✗ NO</span>':'<span style="color:var(--muted)">—</span>'}</div></div>`:`<div class="sc"><div class="slbl">${r.l}</div><div style="color:var(--muted);font-family:\'DM Mono\',monospace;font-size:.9rem;text-align:center;padding:3px 0">${v!==null?v:'—'}</div></div>`;return(r.yn?yc(r.l,r.k,null):nc(r.l,r.k,0,r.mx||6,null,null))+mir;}).join('')}</div></div>`;
+    return`<div class="ss st3"><div class="sh2"><span class="st2">${title}</span><span class="sv">${tJudgeNames[0]} / ${tJudgeNames[1]} (mirror)<span class="smx"> /${maxP}</span></span></div><div class="jc t2"><div class="jch">${tJudgeNames[0]}</div><div class="jch">${tJudgeNames[1]} (=T1)</div>${rows.map(r=>{const v=sd[r.k];const mir=r.yn?`<div class="sc"><div class="slbl">${r.l}</div><div style="text-align:center;padding:4px 0;font-size:.82rem">${v===1?'<span style="color:var(--ok);font-weight:700">✓ YES</span>':v===0?'<span style="color:var(--danger);font-weight:700">✗ NO</span>':'<span style="color:var(--muted)">—</span>'}</div></div>`:`<div class="sc"><div class="slbl">${r.l}</div><div style="color:var(--muted);font-family:\'DM Mono\',monospace;font-size:.9rem;text-align:center;padding:3px 0">${v!==null?v:'—'}</div></div>`;return(r.yn?yc(r.l,r.k,null):nc(r.l,r.k,0,r.mx||6,null,null))+mir;}).join('')}</div></div>`;
   };
 
   // HJ panel
@@ -850,14 +872,15 @@ async function saveFinalOrder(compId,value){
 }
 
 // ── COMPETITORS ──────────────────────────────────────────────
-function openAddModal(){document.getElementById('modalName').value='';document.getElementById('modalEmail').value='';document.getElementById('modalTeam').value='1';document.getElementById('addModal').classList.remove('hidden');setTimeout(()=>document.getElementById('modalName').focus(),100);}
+function openAddModal(){document.getElementById('modalName').value='';document.getElementById('modalEmail').value='';document.getElementById('modalTeam').value='1';document.getElementById('modalTechTeam').value='blue';document.getElementById('addModal').classList.remove('hidden');setTimeout(()=>document.getElementById('modalName').focus(),100);}
 function closeModal(id){document.getElementById(id).classList.add('hidden');}
 async function saveCompetitor(){
   const name=document.getElementById('modalName').value.trim();
   const email=document.getElementById('modalEmail').value.trim()||null;
   const team=document.getElementById('modalTeam').value;
+  const tech_team=document.getElementById('modalTechTeam').value;
   if(!name)return;
-  const{data,error}=await sb.from('competitors').insert({name,email,team,phase}).select().single();
+  const{data,error}=await sb.from('competitors').insert({name,email,team,tech_team,phase}).select().single();
   if(error){toast('Save error','err');return;}
   competitors.push(data);
   scoresCache[data.id]=emptyScoreData();
@@ -871,6 +894,7 @@ function openEditModal(id){
   document.getElementById('editModalName').value=comp.name;
   document.getElementById('editModalEmail').value=comp.email||'';
   document.getElementById('editModalTeam').value=String(comp.team).replace(/^Tým\s*/i,'');
+  document.getElementById('editModalTechTeam').value=comp.tech_team||'blue';
   document.getElementById('editModal').classList.remove('hidden');
   setTimeout(()=>document.getElementById('editModalName').focus(),100);
 }
@@ -879,11 +903,12 @@ async function saveEditCompetitor(){
   const name=document.getElementById('editModalName').value.trim();
   const email=document.getElementById('editModalEmail').value.trim()||null;
   const team=document.getElementById('editModalTeam').value;
+  const tech_team=document.getElementById('editModalTechTeam').value;
   if(!name)return;
-  const{error}=await sb.from('competitors').update({name,email,team}).eq('id',id);
+  const{error}=await sb.from('competitors').update({name,email,team,tech_team}).eq('id',id);
   if(error){toast('Save error','err');return;}
   const comp=competitors.find(c=>c.id===id);
-  if(comp){comp.name=name;comp.email=email;comp.team=team;}
+  if(comp){comp.name=name;comp.email=email;comp.team=team;comp.tech_team=tech_team;}
   closeModal('editModal');renderSidebar();renderScoresheet();
   toast(`${name} updated ✓`,'ok');
 }

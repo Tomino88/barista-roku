@@ -13,9 +13,10 @@ Scorekeeping appka pro Czech Barista Championship 2026 (semi, final, junior).
 - URL: https://cggujadkrrrbeuuxitmm.supabase.co
 - Publishable key: sb_publishable_ekXbKIfiSWnRcw8dcjsNCg_pH1OO5qs
 - Tabulky:
-  - competitors: id, name, email, team, phase, category, start_order, final_order, created_at
+  - competitors: id, name, email, team, tech_team, phase, category, start_order, final_order, created_at
   - scores: competitor_id, data (JSON), updated_by, updated_at
   - scans: id, competitor_id, judge_label, file_path, file_name, uploaded_at, uploaded_by
+  - judges: id, name, role ('sensory'|'technical'|'head'), team ('1'|'2'|'3' pro sensory; 'blue'|'purple' pro tech), phase
 - Storage bucket: scans (max 10MB, jpg/png/pdf)
 - Signed URL expiry: 7 dní (604800s) — pro email linky
 
@@ -95,6 +96,44 @@ Scorekeeping appka pro Czech Barista Championship 2026 (semi, final, junior).
 4. Tereza Váňová — vanovat1@hotelovkapodebrady.eu
 5. Adéla Šmejkalová — smejkaa1@hotelovkapodebrady.eu
 
+## SQL — Judges tabulka (spustit v Supabase SQL editoru)
+
+```sql
+-- 1. Tabulka judžů
+CREATE TABLE IF NOT EXISTS judges (
+  id uuid default gen_random_uuid() primary key,
+  name text not null,
+  role text not null, -- 'sensory', 'technical', 'head'
+  team text,          -- '1','2','3' pro sensory; 'blue','purple' pro tech
+  phase text default 'semi'
+);
+
+-- 2. Judiči
+INSERT INTO judges (name, role, team, phase) VALUES
+('Katalina',    'head',      '1',      'semi'),
+('Eliška',      'sensory',   '1',      'semi'),
+('Tereza',      'sensory',   '1',      'semi'),
+('Tiaran',      'sensory',   '1',      'semi'),
+('Valeria',     'sensory',   '1',      'semi'),
+('Davide',      'head',      '2',      'semi'),
+('Dominik',     'sensory',   '2',      'semi'),
+('Elizaveta',   'sensory',   '2',      'semi'),
+('Aiste',       'sensory',   '2',      'semi'),
+('Tomo Pavlov', 'sensory',   '2',      'semi'),
+('Jim',         'head',      '3',      'semi'),
+('Nikola',      'sensory',   '3',      'semi'),
+('Kamila',      'sensory',   '3',      'semi'),
+('Joanna',      'sensory',   '3',      'semi'),
+('Alesya',      'sensory',   '3',      'semi'),
+('Peter',       'technical', 'blue',   'semi'),
+('Milosz',      'technical', 'blue',   'semi'),
+('Adam',        'technical', 'purple', 'semi'),
+('Daniel',      'technical', 'purple', 'semi');
+
+-- 3. Přidat tech_team do competitors
+ALTER TABLE competitors ADD COLUMN IF NOT EXISTS tech_team text DEFAULT 'blue';
+```
+
 ## TODO před soutěží
 - [ ] Přiřadit soutěžící do Tým 1/2/3 podle rozpisu judžů:
       UPDATE competitors SET team = 'X' WHERE name = 'Jméno';
@@ -148,7 +187,8 @@ Scorekeeping appka pro Czech Barista Championship 2026 (semi, final, junior).
 - Edit Competitor modal: jméno, email, tým
 - Pamatování pozice: přepnutí záložek obnoví posledního vybraného soutěžícího
 - Results záložka: Senior/Junior přepínač, ranking semi + final + junior, top-6 označeni FINALIST
-- Public API /api/results: semi + final + junior JSON, bez autentizace, CORS *
+- Public API /api/results: semi + final + junior JSON, Bearer token auth, CORS *
+- Judges tabulka: jména judžů načtena z DB, zobrazena dynamicky v scoresheet (sensory dle comp.team, tech dle comp.tech_team)
 - Toast notifikace, manual Save tlačítko
 
 ## Hotovo (chronologicky)
@@ -168,6 +208,7 @@ Scorekeeping appka pro Czech Barista Championship 2026 (semi, final, junior).
 - [x] Záložka Junior: scoresheet, judges config, scoring /318 (2026-04-17)
 - [x] Results: Senior/Junior přepínač, junior tabulka S1/S2 (2026-04-17)
 - [x] /api/results zabezpečen Bearer tokenem (RESULTS_API_TOKEN) (2026-04-17)
+- [x] Judges tabulka + dynamická jména v scoresheet (sensory/tech dle týmu) (2026-04-17)
 
 ## Jak nasadit změny
 Jakákoliv změna v index.html → commit → push → Vercel auto-deploy.
