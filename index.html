@@ -828,7 +828,9 @@ function renderRankings(){
     const comps=competitors.filter(c=>c.phase===ph);
     const sorted=comps.map(c=>({...c,r:calcTotal(c)})).sort((a,b)=>{
       if(a.r.dq&&!b.r.dq)return 1;if(!a.r.dq&&b.r.dq)return-1;
-      return b.r.total-a.r.total;
+      if(b.r.total!==a.r.total)return b.r.total-a.r.total;
+      const ao=a.start_order!=null?a.start_order:9999,bo=b.start_order!=null?b.start_order:9999;
+      return ao-bo;
     });
     return`<div style="margin-bottom:2.5rem"><h2 style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--muted);letter-spacing:.08em;margin-bottom:1rem">${label}</h2>
     <table class="rtbl"><thead><tr><th>#</th><th>Name</th><th>Team</th><th>Tech T1+T2</th><th>S1</th><th>S2</th><th>S3</th><th>S4</th><th>Penalty</th><th>Total</th></tr></thead><tbody>
