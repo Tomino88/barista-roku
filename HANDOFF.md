@@ -220,6 +220,8 @@ INSERT INTO judges (name, role, team, phase) VALUES
 - [x] Junior judges (Sandy/Viktoria tech, Kamila/Eliška sensory) — phase-aware lookup (2026-04-17)
 - [x] Tech team derivován z start_order (liché=blue/Peter+Milosz, sudé=purple/Adam+Daniel) (2026-04-17)
 - [x] Head Judge jméno načteno z DB (judges.role='head') — read-only, dle comp.team (2026-04-17)
+- [x] Sidebar: sensory jména judžů pod jménem soutěžícího (dle team+phase) (2026-04-17)
+- [x] Final scoresheet: anonymní judži S1–S4/T1–T2 (DB judges pro finále TBD); HJ jako volný input (2026-04-17)
 
 ## Jak nasadit změny
 Jakákoliv změna v index.html → commit → push → Vercel auto-deploy.
