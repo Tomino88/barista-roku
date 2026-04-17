@@ -223,6 +223,8 @@ INSERT INTO judges (name, role, team, phase) VALUES
 - [x] Head Judge jméno načteno z DB (judges.role='head') — read-only, dle comp.team (2026-04-17)
 - [x] Sidebar: sensory jména judžů pod jménem soutěžícího (dle team+phase) (2026-04-17)
 - [x] judgesCache přestavěna na indexovaný objekt {phase→role→team→[names]} — O(1) lookup (2026-04-17)
+- [x] sensorTeam() derivuje tým ze start_order ((start_order-1)%3+1) — nezávislé na DB (2026-04-17)
+- [x] Sidebar + scoresheet používají sensorTeam() pro judge lookup i display (2026-04-17)
 - [x] Final scoresheet: anonymní judži S1–S4/T1–T2 (DB judges pro finále TBD); HJ jako volný input (2026-04-17)
 
 ## Jak nasadit změny
