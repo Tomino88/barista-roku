@@ -456,7 +456,7 @@ async function loadAll(){
     sb.from('competitors').select('*').order('created_at'),
     sb.from('scores').select('*'),
     sb.from('scans').select('*').order('uploaded_at'),
-    sb.from('judges').select('*'),
+    sb.from('judges').select('*').order('sort_order'),
   ]);
   competitors=compsRes.data||[];
   scoresCache={};
@@ -474,10 +474,6 @@ async function loadAll(){
     if(!judgesCache[ph][rl][tm])judgesCache[ph][rl][tm]=[];
     judgesCache[ph][rl][tm].push(j.name);
   }
-  for(const ph of Object.keys(judgesCache))
-    for(const rl of Object.keys(judgesCache[ph]))
-      for(const tm of Object.keys(judgesCache[ph][rl]))
-        judgesCache[ph][rl][tm].sort((a,b)=>a.localeCompare(b));
 }
 
 async function saveScores(compId){
