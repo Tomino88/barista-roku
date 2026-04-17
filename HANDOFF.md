@@ -60,6 +60,13 @@ Scorekeeping appka pro Czech Barista Championship 2026.
 16. Kamila Chobotová
 17. Almaz Murat
 
+## Soutěžící — Barista Junior (pořadí startu 18.04.2026)
+1. Matěj Netik — matej.netik@horegas.cz
+2. Adina Fraňková — lubor.havlik@soupolicka.cz
+3. Tomáš Tran — lob.ino97@gmail.com
+4. Tereza Váňová — vanovat1@hotelovkapodebrady.eu
+5. Adéla Šmejkalová — smejkaa1@hotelovkapodebrady.eu
+
 ## TODO před soutěží
 - [ ] Přiřadit soutěžící do Tým 1/2/3 podle rozpisu judžů — SQL UPDATE těsně před soutěží:
       UPDATE competitors SET team = 'X' WHERE name = 'Jméno';
@@ -88,6 +95,16 @@ Scorekeeping appka pro Czech Barista Championship 2026.
 
 - [ ] Finalisté: záložka Finál auto-zobrazí top 6 ze semi. Ručně přiřadit startovní pořadí 1–6.
       Případně přidat finalisty jako nové záznamy (phase='final') přes tlačítko "+ Add Competitor".
+- [ ] Spustit v Supabase SQL editoru (Barista Junior — category sloupec + junioři):
+
+      ALTER TABLE competitors ADD COLUMN IF NOT EXISTS category text DEFAULT 'senior';
+
+      INSERT INTO competitors (name, email, phase, category, start_order) VALUES
+        ('Matěj Netik',       'matej.netik@horegas.cz',              'junior', 'junior', 1),
+        ('Adina Fraňková',    'lubor.havlik@soupolicka.cz',          'junior', 'junior', 2),
+        ('Tomáš Tran',        'lob.ino97@gmail.com',                 'junior', 'junior', 3),
+        ('Tereza Váňová',     'vanovat1@hotelovkapodebrady.eu',      'junior', 'junior', 4),
+        ('Adéla Šmejkalová',  'smejkaa1@hotelovkapodebrady.eu',      'junior', 'junior', 5);
 
 ## Features (implementováno)
 - Přihlášení přes Supabase Auth (email + heslo)
