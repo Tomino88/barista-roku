@@ -475,6 +475,7 @@ async function loadAll(){
     for(const rl of Object.keys(judgesCache[ph]))
       for(const tm of Object.keys(judgesCache[ph][rl]))
         judgesCache[ph][rl][tm].sort((a,b)=>a.localeCompare(b));
+  console.log('judgesCache:', JSON.stringify(judgesCache));
 }
 
 async function saveScores(compId){
@@ -665,6 +666,7 @@ function renderSidebar(){
     const sc=r.dq?'<span class="ci-score dq">DQ</span>':`<span class="ci-score">${r.total.toFixed(1)}</span>`;
     const num=c.start_order!=null?`<span style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);min-width:18px;display:inline-block">${c.start_order}.</span> `:'';
     const sjNames=(c.phase==='semi'||c.phase==='junior')?getSensoryJudgeNames(c.team,c.phase).join(' / '):'';
+    console.log('comp:',c.name,'team:',c.team,'judges:',getSensoryJudgeNames(c.team,'semi'));
     d.innerHTML=`<div><div class="ci-name">${num}${c.name}</div><div style="font-size:.68rem;color:var(--muted)">Team ${String(c.team).replace(/^Tým\s*/i,'')}${sjNames?' · '+sjNames:''}</div></div>${sc}`;
     list.appendChild(d);
   });
