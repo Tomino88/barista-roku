@@ -21,7 +21,8 @@ Scorekeeping appka pro Czech Barista Championship 2026 (semi, final, junior).
 
 ## Public API
 - Endpoint: https://barista-roku.vercel.app/api/results
-- Bez autentizace, CORS *, vrací JSON s průběžnými výsledky
+- Autentizace: `Authorization: Bearer <RESULTS_API_TOKEN>` — vrátí 401 bez platného tokenu
+- CORS *, vrací JSON s průběžnými výsledky
 - Pole: `updated_at`, `semi`, `final`, `junior`
 - Semi: seřazeno dle skóre (fallback start_order)
 - Final: dle final_order (fallback skóre) + medal (gold/silver/bronze pro top 3)
@@ -33,6 +34,7 @@ Scorekeeping appka pro Czech Barista Championship 2026 (semi, final, junior).
 - Env vars nastaveny ve Vercel (Production + Preview + Development): ✅
   RESEND_API_KEY — nastaveno
   SUPABASE_SERVICE_ROLE_KEY — nastaveno
+  RESULTS_API_TOKEN — **nutné nastavit ve Vercel dashboard** → hodnota: `8b50bf0154c7632b50fa5a85b86361d4`
 
 ## Stack
 - Frontend: vanilla HTML/JS, single file index.html
@@ -165,6 +167,7 @@ Scorekeeping appka pro Czech Barista Championship 2026 (semi, final, junior).
 - [x] Signed URL expiry prodloužena na 7 dní (2026-04-17)
 - [x] Záložka Junior: scoresheet, judges config, scoring /318 (2026-04-17)
 - [x] Results: Senior/Junior přepínač, junior tabulka S1/S2 (2026-04-17)
+- [x] /api/results zabezpečen Bearer tokenem (RESULTS_API_TOKEN) (2026-04-17)
 
 ## Jak nasadit změny
 Jakákoliv změna v index.html → commit → push → Vercel auto-deploy.
