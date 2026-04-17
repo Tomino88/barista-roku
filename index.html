@@ -417,9 +417,11 @@ function getScores(id){return scoresCache[id]||emptyScoreData();}
 const normTeam=t=>String(t||'').replace(/^Tým\s*/i,'');
 // Derive sensory team from start_order (1→2→3→1→2→3 rotation) — independent of DB team field
 const sensorTeam=c=>(c.phase==='junior'||c.start_order==null)?normTeam(c.team):String(((c.start_order-1)%3)+1);
+const SEMI_SENSORY_ORDER={'1':['Eliška','Tereza','Tiaran','Valeria'],'2':['Dominik','Elizaveta','Aiste','Tomo Pavlov'],'3':['Nikola','Kamila','Joanna','Alesya']};
 function getSensoryJudgeNames(team,ph){
   if(ph==='junior'){const s=judgesCache?.junior?.sensory||{};return Object.keys(s).sort().flatMap(k=>s[k]);}
-  return judgesCache?.semi?.sensory?.[normTeam(team)]||[];
+  const tm=normTeam(team);
+  return SEMI_SENSORY_ORDER[tm]||(judgesCache?.semi?.sensory?.[tm]||[]);
 }
 function getTechJudgeNames(tech_team,ph){
   if(ph==='junior'){const t=judgesCache?.junior?.technical||{};const s=Object.keys(t).sort().flatMap(k=>t[k]);return[s[0]||'T1',s[1]||'T2'];}
