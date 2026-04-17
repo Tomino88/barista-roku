@@ -414,11 +414,18 @@ function calcTotal(comp){
 
 function getScores(id){return scoresCache[id]||emptyScoreData();}
 
-function getSensoryJudgeNames(team){
-  return judgesCache.filter(j=>j.role==='sensory'&&String(j.team)===String(team)).sort((a,b)=>a.name.localeCompare(b.name)).map(j=>j.name);
+function getSensoryJudgeNames(team,ph){
+  if(ph==='junior'){
+    return judgesCache.filter(j=>j.role==='sensory'&&j.phase==='junior').sort((a,b)=>(a.team||'').localeCompare(b.team||'')).map(j=>j.name);
+  }
+  return judgesCache.filter(j=>j.role==='sensory'&&j.phase!=='junior'&&String(j.team)===String(team)).sort((a,b)=>a.name.localeCompare(b.name)).map(j=>j.name);
 }
-function getTechJudgeNames(tech_team){
-  const js=judgesCache.filter(j=>j.role==='technical'&&j.team===(tech_team||'blue')).sort((a,b)=>a.name.localeCompare(b.name));
+function getTechJudgeNames(tech_team,ph){
+  if(ph==='junior'){
+    const js=judgesCache.filter(j=>j.role==='technical'&&j.phase==='junior').sort((a,b)=>(a.team||'').localeCompare(b.team||''));
+    return[js[0]?.name||'T1',js[1]?.name||'T2'];
+  }
+  const js=judgesCache.filter(j=>j.role==='technical'&&j.phase!=='junior'&&j.team===(tech_team||'blue')).sort((a,b)=>a.name.localeCompare(b.name));
   return[js[0]?.name||'T1',js[1]?.name||'T2'];
 }
 
@@ -664,8 +671,8 @@ function renderScoresheet(){
   const pen=timePen(sd.time),dq=isDQ(sd.time);
   const dqH=dq?`<span class="dq-badge">DISQUALIFIED</span>`:'';
   const activeJudgeIndices=fin?finalJudges:jun?juniorSensoryJudges:[0,1,2,3];
-  const sJudgeNames=getSensoryJudgeNames(comp.team);
-  const tJudgeNames=getTechJudgeNames(comp.tech_team);
+  const sJudgeNames=getSensoryJudgeNames(comp.team,phase);
+  const tJudgeNames=getTechJudgeNames(comp.tech_team,phase);
   const JL=activeJudgeIndices.map(i=>sJudgeNames[i]||'Judge '+(i+1));
 
   const nc=(lbl,key,mn,mx,mult,ji,ml2)=>{

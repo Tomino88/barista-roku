@@ -16,7 +16,7 @@ Scorekeeping appka pro Czech Barista Championship 2026 (semi, final, junior).
   - competitors: id, name, email, team, tech_team, phase, category, start_order, final_order, created_at
   - scores: competitor_id, data (JSON), updated_by, updated_at
   - scans: id, competitor_id, judge_label, file_path, file_name, uploaded_at, uploaded_by
-  - judges: id, name, role ('sensory'|'technical'|'head'), team ('1'|'2'|'3' pro sensory; 'blue'|'purple' pro tech), phase
+    - judges: id, name, role ('sensory'|'technical'|'head'), team ('1'|'2'|'3' pro sensory semi; 'blue'|'purple' pro tech semi; '1'|'2' pro junior), phase ('semi'|'junior')
 - Storage bucket: scans (max 10MB, jpg/png/pdf)
 - Signed URL expiry: 7 dní (604800s) — pro email linky
 
@@ -132,6 +132,14 @@ INSERT INTO judges (name, role, team, phase) VALUES
 
 -- 3. Přidat tech_team do competitors
 ALTER TABLE competitors ADD COLUMN IF NOT EXISTS tech_team text DEFAULT 'blue';
+
+-- 4. Junior judges
+INSERT INTO judges (name, role, team, phase) VALUES
+('Tereza',   'head',      null, 'junior'),
+('Kamila',   'sensory',   '1',  'junior'),
+('Eliška',   'sensory',   '2',  'junior'),
+('Sandy',    'technical', '1',  'junior'),
+('Viktoria', 'technical', '2',  'junior');
 ```
 
 ## TODO před soutěží
@@ -209,6 +217,7 @@ ALTER TABLE competitors ADD COLUMN IF NOT EXISTS tech_team text DEFAULT 'blue';
 - [x] Results: Senior/Junior přepínač, junior tabulka S1/S2 (2026-04-17)
 - [x] /api/results zabezpečen Bearer tokenem (RESULTS_API_TOKEN) (2026-04-17)
 - [x] Judges tabulka + dynamická jména v scoresheet (sensory/tech dle týmu) (2026-04-17)
+- [x] Junior judges (Sandy/Viktoria tech, Kamila/Eliška sensory) — phase-aware lookup (2026-04-17)
 
 ## Jak nasadit změny
 Jakákoliv změna v index.html → commit → push → Vercel auto-deploy.
