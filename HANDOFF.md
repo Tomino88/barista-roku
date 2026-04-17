@@ -222,6 +222,7 @@ INSERT INTO judges (name, role, team, phase) VALUES
 - [x] Týmy soutěžících přiřazeny přes REST API — Team 1/2/3 dle rozpisu judžů (2026-04-17)
 - [x] Head Judge jméno načteno z DB (judges.role='head') — read-only, dle comp.team (2026-04-17)
 - [x] Sidebar: sensory jména judžů pod jménem soutěžícího (dle team+phase) (2026-04-17)
+- [x] judgesCache přestavěna na indexovaný objekt {phase→role→team→[names]} — O(1) lookup (2026-04-17)
 - [x] Final scoresheet: anonymní judži S1–S4/T1–T2 (DB judges pro finále TBD); HJ jako volný input (2026-04-17)
 
 ## Jak nasadit změny

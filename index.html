@@ -281,7 +281,7 @@ const SUPA_URL='https://cggujadkrrrbeuuxitmm.supabase.co';
 const SUPA_KEY='sb_publishable_ekXbKIfiSWnRcw8dcjsNCg_pH1OO5qs';
 const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
 
-let phase='semi',competitors=[],scoresCache={},scansCache={},judgesCache=[],selectedId=null,currentUser=null,saveTimeout=null,isDirty=false;
+let phase='semi',competitors=[],scoresCache={},scansCache={},judgesCache={},selectedId=null,currentUser=null,saveTimeout=null,isDirty=false;
 const lastSelectedId={semi:null,final:null,junior:null};
 let finalJudges=JSON.parse(localStorage.getItem('finalJudges')||'[0,1,2,3]');
 let finalTechJudges=JSON.parse(localStorage.getItem('finalTechJudges')||'[0,1]');
@@ -415,23 +415,16 @@ function calcTotal(comp){
 function getScores(id){return scoresCache[id]||emptyScoreData();}
 
 function getSensoryJudgeNames(team,ph){
-  if(ph==='junior'){
-    return judgesCache.filter(j=>j.role==='sensory'&&j.phase==='junior').sort((a,b)=>(a.team||'').localeCompare(b.team||'')).map(j=>j.name);
-  }
-  return judgesCache.filter(j=>j.role==='sensory'&&j.phase!=='junior'&&String(j.team)===String(team)).sort((a,b)=>a.name.localeCompare(b.name)).map(j=>j.name);
+  if(ph==='junior'){const t=judgesCache?.junior?.sensory||{};return Object.keys(t).sort().flatMap(k=>t[k]);}
+  return judgesCache?.semi?.sensory?.[String(team)]||[];
 }
 function getTechJudgeNames(tech_team,ph){
-  if(ph==='junior'){
-    const js=judgesCache.filter(j=>j.role==='technical'&&j.phase==='junior').sort((a,b)=>(a.team||'').localeCompare(b.team||''));
-    return[js[0]?.name||'T1',js[1]?.name||'T2'];
-  }
-  const js=judgesCache.filter(j=>j.role==='technical'&&j.phase!=='junior'&&j.team===(tech_team||'blue')).sort((a,b)=>a.name.localeCompare(b.name));
-  return[js[0]?.name||'T1',js[1]?.name||'T2'];
+  if(ph==='junior'){const t=judgesCache?.junior?.technical||{};const s=Object.keys(t).sort().flatMap(k=>t[k]);return[s[0]||'T1',s[1]||'T2'];}
+  const n=judgesCache?.semi?.technical?.[tech_team||'blue']||[];return[n[0]||'T1',n[1]||'T2'];
 }
 function getHeadJudgeName(team,ph){
-  if(ph==='junior'){const j=judgesCache.find(j=>j.role==='head'&&j.phase==='junior');return j?j.name:'';}
-  const j=judgesCache.find(j=>j.role==='head'&&j.phase!=='junior'&&String(j.team)===String(team));
-  return j?j.name:'';
+  if(ph==='junior')return(judgesCache?.junior?.head?.['']||[])[0]||'';
+  return(judgesCache?.semi?.head?.[String(team)]||[])[0]||'';
 }
 
 // ── AUTH ─────────────────────────────────────────────────────
@@ -470,7 +463,18 @@ async function loadAll(){
     if(!scansCache[r.competitor_id])scansCache[r.competitor_id]=[];
     scansCache[r.competitor_id].push(r);
   });
-  judgesCache=judgesRes.data||[];
+  judgesCache={};
+  for(const j of(judgesRes.data||[])){
+    const ph=j.phase||'semi',rl=j.role,tm=String(j.team??'');
+    if(!judgesCache[ph])judgesCache[ph]={};
+    if(!judgesCache[ph][rl])judgesCache[ph][rl]={};
+    if(!judgesCache[ph][rl][tm])judgesCache[ph][rl][tm]=[];
+    judgesCache[ph][rl][tm].push(j.name);
+  }
+  for(const ph of Object.keys(judgesCache))
+    for(const rl of Object.keys(judgesCache[ph]))
+      for(const tm of Object.keys(judgesCache[ph][rl]))
+        judgesCache[ph][rl][tm].sort((a,b)=>a.localeCompare(b));
 }
 
 async function saveScores(compId){
