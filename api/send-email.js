@@ -27,7 +27,7 @@ export default async function handler(req) {
     return new Response('Server misconfiguration', { status: 500 });
   }
 
-  // Generate signed URLs for each scan (1 hour = 3600 seconds)
+  // Generate signed URLs for each scan (7 days = 604800 seconds)
   const signedScans = [];
   for (const scan of scans) {
     const res = await fetch(
@@ -39,7 +39,7 @@ export default async function handler(req) {
           'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
           'apikey': SUPABASE_SERVICE_ROLE_KEY,
         },
-        body: JSON.stringify({ expiresIn: 3600 }),
+        body: JSON.stringify({ expiresIn: 604800 }),
       }
     );
 
@@ -101,7 +101,7 @@ export default async function handler(req) {
             </p>
             <p style="margin:0 0 24px;font-size:14px;color:#6b7c93;line-height:1.6;">
               Your scoresheets from the competition are ready. The download links below are
-              valid for <strong>1 hour</strong>. Please save the files to your device promptly.
+              valid for <strong>7 days</strong>. Please save the files to your device.
             </p>
 
             <table width="100%" cellpadding="0" cellspacing="0">
