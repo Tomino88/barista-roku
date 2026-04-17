@@ -34,7 +34,7 @@ Scorekeeping appka pro Czech Barista Championship 2026 (semi, final, junior).
 - Env vars nastaveny ve Vercel (Production + Preview + Development): ✅
   RESEND_API_KEY — nastaveno
   SUPABASE_SERVICE_ROLE_KEY — nastaveno
-  RESULTS_API_TOKEN — **nutné nastavit ve Vercel dashboard** → hodnota: `8b50bf0154c7632b50fa5a85b86361d4`
+  RESULTS_API_TOKEN — nastaveno (hodnota: `8b50bf0154c7632b50fa5a85b86361d4`)
 
 ## Stack
 - Frontend: vanilla HTML/JS, single file index.html
