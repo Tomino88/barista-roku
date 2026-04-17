@@ -112,6 +112,9 @@ Scorekeeping appka pro Czech Barista Championship 2026.
 - Záložka Final: auto top-6 ze semi (klikatelné, scoresheet dostupný) + start order input (final_order, DB) + judges checkboxy T1/T2/S1–S4 (localStorage)
 - Záložka Final: pořadí top-6 dle final_order (nebo skóre), top 3 zvýrazněni medailemi (🥇🥈🥉) + barevné pozadí řádku
 - Záložka Final: fin detekce podle aktivní záložky (ne phase v DB) → finalisté ze semi mají správnou final judges konfiguraci
+- Záložka Junior (phase='junior'): tech stejný jako semi (max 71) + sensory 2 judges (max 88/judge) — 3 části: Espresso/49, Milk/33, Barista Eval/6 → celkem max /318
+- Junior Judges sidebar: T1/T2/S1/S2 checkboxy (localStorage), HJ panel T1+T2+S1+S2
+- Results záložka: Senior/Junior přepínač; junior tabulka se S1/S2 sloupci
 - Scoring: sensory (4 judges) + tech (T1+T2 mirror) v obou záložkách semi i final; T1/T2 konfigurovatelné ve Final Judges
 - Výpočet skóre: running total, ×násobek kalkulace vždy viditelná (i pro prázdná pole), time penalty, DQ
 - Head Judge: input v scoresheet (localStorage), zobrazí se v HJ Summary panelu
@@ -132,6 +135,9 @@ Scorekeeping appka pro Czech Barista Championship 2026.
 - [x] Multiplier kalkulace vždy viditelná u všech soutěžících v semi (2026-04-16)
 - [x] Finalisté (top-6 ze semi) klikatelní v Final sidebaru, scoresheet dostupný (2026-04-16)
 - [x] Medailové zvýraznění top 3 v Final sidebaru dle final_order nebo skóre (2026-04-16)
+- [x] Záložka Junior: scoresheet, judges config, scoring /318 (2026-04-17)
+- [x] Results: Senior/Junior přepínač, junior tabulka (2026-04-17)
+- [x] API /api/results rozšířeno o pole junior (2026-04-17)
 
 ## Jak nasadit změny
 Jakákoliv změna v index.html → commit → push → Vercel auto-deploy.

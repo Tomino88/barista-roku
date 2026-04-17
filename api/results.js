@@ -119,8 +119,22 @@ export default async function handler(req) {
       phase: 'final',
     }));
 
+  // Junior — sort by score desc, fallback to start_order
+  const junior = competitors
+    .filter(c => c.phase === 'junior')
+    .map(c => ({ ...c, s: score(c) }))
+    .sort((a, b) => {
+      if (a.s.dq && !b.s.dq) return 1;
+      if (!a.s.dq && b.s.dq) return -1;
+      if (b.s.total !== a.s.total) return (b.s.total || 0) - (a.s.total || 0);
+      const ao = a.start_order != null ? a.start_order : 9999;
+      const bo = b.start_order != null ? b.start_order : 9999;
+      return ao - bo;
+    })
+    .map((c, i) => ({ rank: i + 1, name: c.name, score: c.s.dq ? null : +(c.s.total || 0).toFixed(1), ...(c.s.dq ? { dq: true } : {}), phase: 'junior' }));
+
   return new Response(
-    JSON.stringify({ updated_at: new Date().toISOString(), semi, final }),
+    JSON.stringify({ updated_at: new Date().toISOString(), semi, final, junior }),
     { status: 200, headers: CORS }
   );
 }
