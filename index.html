@@ -414,9 +414,10 @@ function calcTotal(comp){
 
 function getScores(id){return scoresCache[id]||emptyScoreData();}
 
+const normTeam=t=>String(t||'').replace(/^Tým\s*/i,'');
 function getSensoryJudgeNames(team,ph){
-  if(ph==='junior'){const t=judgesCache?.junior?.sensory||{};return Object.keys(t).sort().flatMap(k=>t[k]);}
-  return judgesCache?.semi?.sensory?.[String(team)]||[];
+  if(ph==='junior'){const s=judgesCache?.junior?.sensory||{};return Object.keys(s).sort().flatMap(k=>s[k]);}
+  return judgesCache?.semi?.sensory?.[normTeam(team)]||[];
 }
 function getTechJudgeNames(tech_team,ph){
   if(ph==='junior'){const t=judgesCache?.junior?.technical||{};const s=Object.keys(t).sort().flatMap(k=>t[k]);return[s[0]||'T1',s[1]||'T2'];}
@@ -424,7 +425,7 @@ function getTechJudgeNames(tech_team,ph){
 }
 function getHeadJudgeName(team,ph){
   if(ph==='junior')return(judgesCache?.junior?.head?.['']||[])[0]||'';
-  return(judgesCache?.semi?.head?.[String(team)]||[])[0]||'';
+  return(judgesCache?.semi?.head?.[normTeam(team)]||[])[0]||'';
 }
 
 // ── AUTH ─────────────────────────────────────────────────────
@@ -475,7 +476,6 @@ async function loadAll(){
     for(const rl of Object.keys(judgesCache[ph]))
       for(const tm of Object.keys(judgesCache[ph][rl]))
         judgesCache[ph][rl][tm].sort((a,b)=>a.localeCompare(b));
-  console.log('judgesCache:', JSON.stringify(judgesCache));
 }
 
 async function saveScores(compId){
@@ -666,7 +666,6 @@ function renderSidebar(){
     const sc=r.dq?'<span class="ci-score dq">DQ</span>':`<span class="ci-score">${r.total.toFixed(1)}</span>`;
     const num=c.start_order!=null?`<span style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);min-width:18px;display:inline-block">${c.start_order}.</span> `:'';
     const sjNames=(c.phase==='semi'||c.phase==='junior')?getSensoryJudgeNames(c.team,c.phase).join(' / '):'';
-    console.log('comp:',c.name,'team:',c.team,'judges:',getSensoryJudgeNames(c.team,'semi'));
     d.innerHTML=`<div><div class="ci-name">${num}${c.name}</div><div style="font-size:.68rem;color:var(--muted)">Team ${String(c.team).replace(/^Tým\s*/i,'')}${sjNames?' · '+sjNames:''}</div></div>${sc}`;
     list.appendChild(d);
   });
