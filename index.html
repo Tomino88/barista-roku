@@ -472,8 +472,14 @@ async function loadAll(){
     if(!judgesCache[ph])judgesCache[ph]={};
     if(!judgesCache[ph][rl])judgesCache[ph][rl]={};
     if(!judgesCache[ph][rl][tm])judgesCache[ph][rl][tm]=[];
-    judgesCache[ph][rl][tm].push(j.name);
+    judgesCache[ph][rl][tm].push({name:j.name,order:j.sort_order??999});
   }
+  for(const ph of Object.keys(judgesCache))
+    for(const rl of Object.keys(judgesCache[ph]))
+      for(const tm of Object.keys(judgesCache[ph][rl])){
+        judgesCache[ph][rl][tm].sort((a,b)=>a.order-b.order);
+        judgesCache[ph][rl][tm]=judgesCache[ph][rl][tm].map(x=>x.name);
+      }
 }
 
 async function saveScores(compId){
