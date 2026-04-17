@@ -678,7 +678,7 @@ function renderScoresheet(){
   const dqH=dq?`<span class="dq-badge">DISQUALIFIED</span>`:'';
   const activeJudgeIndices=fin?finalJudges:jun?juniorSensoryJudges:[0,1,2,3];
   const sJudgeNames=fin?[]:getSensoryJudgeNames(comp.team,phase);
-  const effectiveTechTeam=(!jun&&comp.start_order!=null)?(comp.start_order%2===1?'blue':'purple'):(comp.tech_team||'blue');
+  const effectiveTechTeam=(!jun&&comp.start_order!=null)?(comp.start_order%2===1?'purple':'blue'):(comp.tech_team||'blue');
   const tJudgeNames=fin?['T1','T2']:getTechJudgeNames(effectiveTechTeam,phase);
   const JL=activeJudgeIndices.map(i=>fin?`S${i+1}`:(sJudgeNames[i]||'S'+(i+1)));
 
