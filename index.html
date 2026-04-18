@@ -991,9 +991,10 @@ function renderRankings(){
     }).join('');
     return`<div style="margin-bottom:2.5rem"><h2 style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--muted);letter-spacing:.08em;margin-bottom:1rem">${label}</h2><table class="rtbl"><thead>${hdr}</thead><tbody>${rows}</tbody></table></div>`;
   };
-  const toggle=`<div style="display:flex;gap:8px;margin-bottom:1.5rem">
+  const toggle=`<div style="display:flex;gap:8px;margin-bottom:1.5rem;align-items:center">
     <button class="btn ${rankingView==='senior'?'btn-p':'btn-g'}" onclick="setRankingView('senior')">Senior</button>
     <button class="btn ${rankingView==='junior'?'btn-p':'btn-g'}" onclick="setRankingView('junior')">Junior</button>
+    <button class="btn btn-g" onclick="exportCSV()" style="margin-left:auto">Export CSV</button>
   </div>`;
   const top6=competitors.filter(c=>c.phase==='semi')
     .map(c=>({...c,r:calcTotal(c,'semi')})).filter(c=>!c.r.dq)
@@ -1003,6 +1004,57 @@ function renderRankings(){
   }else{
     el.innerHTML=toggle+rr('Semi-Final',competitors.filter(c=>c.phase==='semi'),undefined,6,true)+rr('Final',top6,'final',1,true);
   }
+}
+
+// ── EXPORT CSV ───────────────────────────────────────────────
+function exportCSV(){
+  const sortComps=(comps,forcePhase)=>comps.map(c=>({...c,r:calcTotal(c,forcePhase)})).sort((a,b)=>{
+    if(a.r.dq&&!b.r.dq)return 1;if(!a.r.dq&&b.r.dq)return-1;
+    if(b.r.total!==a.r.total)return b.r.total-a.r.total;
+    const ao=a.final_order!=null?a.final_order:9999,bo=b.final_order!=null?b.final_order:9999;
+    return ao-bo;
+  });
+  const esc=v=>{const s=String(v==null?'':v);return(s.includes(';')||s.includes('"')||s.includes('\n'))?'"'+s.replace(/"/g,'""')+'"':s;};
+  const row=(...cols)=>cols.map(esc).join(';');
+  const lines=[];
+
+  // Semi-Final
+  const semiSorted=sortComps(competitors.filter(c=>c.phase==='semi'),'semi');
+  const top6ids=semiSorted.filter(c=>!c.r.dq).slice(0,6).map(c=>c.id);
+  lines.push(row('SEMI-FINAL'));
+  lines.push(row('#','Name','Team','Tech T1+T2','S1','S2','S3','S4','Penalty','Total','DQ','Medal'));
+  semiSorted.forEach((c,i)=>{
+    const teamVal=(competitors.find(x=>x.id===c.id)?.team)||'?';
+    const medal=top6ids.includes(c.id)?'Finalist':'';
+    lines.push(row(i+1,c.name,'Team '+String(teamVal).replace(/^Tým\s*/i,''),c.r.tc.toFixed(1),c.r.ss[0].toFixed(1),c.r.ss[1].toFixed(1),c.r.ss[2].toFixed(1),c.r.ss[3].toFixed(1),c.r.pen>0?'-'+c.r.pen:0,c.r.total.toFixed(1),c.r.dq?'DQ':'',medal));
+  });
+  lines.push('');
+
+  // Final
+  const top6=competitors.filter(c=>c.phase==='semi').map(c=>({...c,r:calcTotal(c,'semi')})).filter(c=>!c.r.dq).sort((a,b)=>b.r.total-a.r.total).slice(0,6);
+  const finalSorted=sortComps(top6,'final');
+  const MEDALS=['Gold','Silver','Bronze'];
+  lines.push(row('FINAL'));
+  lines.push(row('#','Name','Team','Tech T1+T2','S1','S2','S3','S4','Penalty','Total','DQ','Medal'));
+  finalSorted.forEach((c,i)=>{
+    const teamVal=(competitors.find(x=>x.id===c.id)?.team)||'?';
+    const medal=!c.r.dq&&i<3?MEDALS[i]:(!c.r.dq?'Finalist':'');
+    lines.push(row(i+1,c.name,'Team '+String(teamVal).replace(/^Tým\s*/i,''),c.r.tc.toFixed(1),c.r.ss[0].toFixed(1),c.r.ss[1].toFixed(1),c.r.ss[2].toFixed(1),c.r.ss[3].toFixed(1),c.r.pen>0?'-'+c.r.pen:0,c.r.total.toFixed(1),c.r.dq?'DQ':'',medal));
+  });
+  lines.push('');
+
+  // Junior
+  const juniorSorted=sortComps(competitors.filter(c=>c.phase==='junior'),'junior');
+  lines.push(row('BARISTA JUNIOR'));
+  lines.push(row('#','Name','Tech T1+T2','S1','S2','Penalty','Total','DQ'));
+  juniorSorted.forEach((c,i)=>{
+    lines.push(row(i+1,c.name,c.r.tc.toFixed(1),(c.r.ss[0]||0).toFixed(1),(c.r.ss[1]||0).toFixed(1),c.r.pen>0?'-'+c.r.pen:0,c.r.total.toFixed(1),c.r.dq?'DQ':''));
+  });
+
+  const blob=new Blob(['\uFEFF'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='CBC2026_results.csv';a.click();
+  URL.revokeObjectURL(url);
 }
 
 // ── TOAST ────────────────────────────────────────────────────
