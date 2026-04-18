@@ -282,7 +282,7 @@ const SUPA_URL='https://cggujadkrrrbeuuxitmm.supabase.co';
 const SUPA_KEY='sb_publishable_ekXbKIfiSWnRcw8dcjsNCg_pH1OO5qs';
 const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
 
-let phase='semi',competitors=[],scoresCache={},scansCache={},judgesCache={},selectedId=null,currentUser=null,saveTimeout=null,isDirty=false;
+let phase='semi',competitors=[],scoresCache={},finalScoresCache={},scansCache={},judgesCache={},selectedId=null,currentUser=null,saveTimeout=null,isDirty=false;
 const lastSelectedId={semi:null,final:null,junior:null};
 let finalJudges=JSON.parse(localStorage.getItem('finalJudges')||'[0,1,2,3]');
 let finalTechJudges=JSON.parse(localStorage.getItem('finalTechJudges')||'[0,1]');
@@ -391,9 +391,10 @@ function juniorSensoryScore(sj){
   return{p1,p2,p3,tot:p1+p2+p3};
 }
 
-function calcTotal(comp){
+function calcTotal(comp,forcePhase){
+  const p=forcePhase!==undefined?forcePhase:phase;
   if(comp.phase==='junior'){
-    const sd=getScores(comp.id);
+    const sd=getScores(comp.id,'junior');
     const dq=isDQ(sd.time);
     const pen=timePen(sd.time);
     const tr=techScore(sd);
@@ -402,7 +403,8 @@ function calcTotal(comp){
     const st=ss.reduce((a,b)=>a+b,0);
     return{total:tc+st-pen,dq,tech:tr.tot,tc,ss,st,pen};
   }
-  const sd=getScores(comp.id),fin=comp.phase==='final';
+  const fin=p==='final';
+  const sd=getScores(comp.id,p);
   const dq=isDQ(sd.time);
   const pen=timePen(sd.time);
   const tr=techScore(sd);
@@ -413,7 +415,11 @@ function calcTotal(comp){
   return{total:tc+stot-pen,dq,tech:tr.tot,tc,ss,st:stot,pen};
 }
 
-function getScores(id){return scoresCache[id]||emptyScoreData();}
+function getScores(id,forcePhase){
+  const p=forcePhase!==undefined?forcePhase:phase;
+  if(p==='final')return finalScoresCache[id]||emptyScoreData();
+  return scoresCache[id]||emptyScoreData();
+}
 
 const normTeam=t=>String(t||'').replace(/^Tým\s*/i,'');
 // Derive sensory team from start_order (1→2→3→1→2→3 rotation) — independent of DB team field
@@ -462,8 +468,11 @@ async function loadAll(){
     sb.from('judges').select('*').order('sort_order'),
   ]);
   competitors=compsRes.data||[];
-  scoresCache={};
-  (scoresRes.data||[]).forEach(r=>{scoresCache[r.competitor_id]=r.data;});
+  scoresCache={};finalScoresCache={};
+  (scoresRes.data||[]).forEach(r=>{
+    if(r.phase==='final')finalScoresCache[r.competitor_id]=r.data;
+    else scoresCache[r.competitor_id]=r.data;
+  });
   scansCache={};
   (scansRes.data||[]).forEach(r=>{
     if(!scansCache[r.competitor_id])scansCache[r.competitor_id]=[];
@@ -486,8 +495,11 @@ async function loadAll(){
 }
 
 async function saveScores(compId){
-  const data=scoresCache[compId]||emptyScoreData();
-  const{error}=await sb.from('scores').upsert({competitor_id:compId,data,updated_by:currentUser.id},{onConflict:'competitor_id'});
+  const isF=phase==='final';
+  const scorePhase=isF?'final':(phase==='junior'?'junior':'semi');
+  const cache=isF?finalScoresCache:scoresCache;
+  const data=cache[compId]||emptyScoreData();
+  const{error}=await sb.from('scores').upsert({competitor_id:compId,phase:scorePhase,data,updated_by:currentUser.id},{onConflict:'competitor_id,phase'});
   if(error){toast('Save failed','err');return;}
   isDirty=false;
   toast('Saved ✓','ok');
@@ -498,7 +510,8 @@ async function manualSave(){
 }
 async function resetScore(compId){
   if(!confirm('Reset all scores for this competitor to zero?'))return;
-  scoresCache[compId]=emptyScoreData();
+  const cache=phase==='final'?finalScoresCache:scoresCache;
+  cache[compId]=emptyScoreData();
   await saveScores(compId);
   renderSidebar();renderScoresheet();
 }
@@ -585,7 +598,7 @@ function renderSidebar(){
   }else if(phase==='final'){
     // Top 6 auto panel
     const semi=competitors.filter(c=>c.phase==='semi')
-      .map(c=>({...c,r:calcTotal(c)})).filter(c=>!c.r.dq)
+      .map(c=>({...c,r:calcTotal(c,'semi')})).filter(c=>!c.r.dq)
       .sort((a,b)=>b.r.total-a.r.total).slice(0,6)
       .sort((a,b)=>{const ao=a.final_order!=null?a.final_order:9999,bo=b.final_order!=null?b.final_order:9999;return ao!==bo?ao-bo:b.r.total-a.r.total;});
     const medals=['🥇','🥈','🥉'],medalBg=['#FFF8E1','#F5F5F5','#FBE9E7'];
@@ -788,8 +801,9 @@ function renderScoresheet(){
 
 // ── UPDATE ───────────────────────────────────────────────────
 function upd(compId,key,value,ji){
-  if(!scoresCache[compId])scoresCache[compId]=emptyScoreData();
-  const sd=scoresCache[compId];
+  const cache=phase==='final'?finalScoresCache:scoresCache;
+  if(!cache[compId])cache[compId]=emptyScoreData();
+  const sd=cache[compId];
   const p=(value===''||value===null)?null:(value===0||value===1)?value:parseFloat(value);
   if(ji!==null)sd.sensory[ji][key]=(value===''||value===null)?null:p;
   else if(key==='time')sd.time=value;
@@ -945,7 +959,7 @@ async function removeComp(id){
   if(!confirm('Remove competitor and all their data?'))return;
   await sb.from('competitors').delete().eq('id',id);
   competitors=competitors.filter(c=>c.id!==id);
-  delete scoresCache[id];delete scansCache[id];
+  delete scoresCache[id];delete finalScoresCache[id];delete scansCache[id];
   selectedId=null;renderSidebar();
   document.getElementById('mainContent').innerHTML=`<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted)">Select a competitor</div>`;
   toast('Competitor removed','ok');
