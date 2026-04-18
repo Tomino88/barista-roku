@@ -970,14 +970,14 @@ let rankingView='senior';
 function setRankingView(v){rankingView=v;renderRankings();}
 function renderRankings(){
   const el=document.getElementById('rankingContent');
-  const sortComps=(comps)=>comps.map(c=>({...c,r:calcTotal(c)})).sort((a,b)=>{
+  const sortComps=(comps,forcePhase)=>comps.map(c=>({...c,r:calcTotal(c,forcePhase)})).sort((a,b)=>{
     if(a.r.dq&&!b.r.dq)return 1;if(!a.r.dq&&b.r.dq)return-1;
     if(b.r.total!==a.r.total)return b.r.total-a.r.total;
-    const ao=a.start_order!=null?a.start_order:9999,bo=b.start_order!=null?b.start_order:9999;
+    const ao=a.final_order!=null?a.final_order:9999,bo=b.final_order!=null?b.final_order:9999;
     return ao-bo;
   });
-  const rr=(label,ph,topN,cols4)=>{
-    const sorted=sortComps(competitors.filter(c=>c.phase===ph));
+  const rr=(label,comps,forcePhase,topN,cols4)=>{
+    const sorted=sortComps(comps,forcePhase);
     const hdr=cols4
       ?`<tr><th>#</th><th>Name</th><th>Team</th><th>Tech T1+T2</th><th>S1</th><th>S2</th><th>S3</th><th>S4</th><th>Penalty</th><th>Total</th></tr>`
       :`<tr><th>#</th><th>Name</th><th>Team</th><th>Tech T1+T2</th><th>S1</th><th>S2</th><th>Penalty</th><th>Total</th></tr>`;
@@ -993,10 +993,13 @@ function renderRankings(){
     <button class="btn ${rankingView==='senior'?'btn-p':'btn-g'}" onclick="setRankingView('senior')">Senior</button>
     <button class="btn ${rankingView==='junior'?'btn-p':'btn-g'}" onclick="setRankingView('junior')">Junior</button>
   </div>`;
+  const top6=competitors.filter(c=>c.phase==='semi')
+    .map(c=>({...c,r:calcTotal(c,'semi')})).filter(c=>!c.r.dq)
+    .sort((a,b)=>b.r.total-a.r.total).slice(0,6);
   if(rankingView==='junior'){
-    el.innerHTML=toggle+rr('Barista Junior','junior',0,false);
+    el.innerHTML=toggle+rr('Barista Junior',competitors.filter(c=>c.phase==='junior'),undefined,0,false);
   }else{
-    el.innerHTML=toggle+rr('Semi-Final','semi',6,true)+rr('Final','final',1,true);
+    el.innerHTML=toggle+rr('Semi-Final',competitors.filter(c=>c.phase==='semi'),undefined,6,true)+rr('Final',top6,'final',1,true);
   }
 }
 
