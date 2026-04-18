@@ -683,7 +683,7 @@ function renderSidebar(){
     const d=document.createElement('div');
     d.className='ci'+(c.id===selectedId?' active':'');
     d.onclick=()=>selectComp(c.id);
-    const sc=r.dq?'<span class="ci-score dq">DQ</span>':`<span class="ci-score">${r.total.toFixed(1)}</span>`;
+    const sc=r.dq?`<span class="ci-score dq">DQ (${r.total.toFixed(1)})</span>`:`<span class="ci-score">${r.total.toFixed(1)}</span>`;
     const num=c.start_order!=null?`<span style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);min-width:18px;display:inline-block">${c.start_order}.</span> `:'';
     const st=sensorTeam(c);
     const sjNames=(c.phase==='semi'||c.phase==='junior')?getSensoryJudgeNames(st,c.phase).join(' / '):'';
@@ -791,7 +791,7 @@ function renderScoresheet(){
         ${r.pen>0?`<div class="bd"><div class="bdl">Penalty</div><div class="bdv" style="color:var(--danger)">−${r.pen}</div></div>`:''}
       </div>
       <div style="text-align:right">
-        <div class="tbig">${r.dq?'DQ':r.total.toFixed(1)}</div>
+        <div class="tbig">${r.dq?'DQ ('+r.total.toFixed(1)+')':r.total.toFixed(1)}</div>
         <div style="font-size:.68rem;color:var(--muted);font-weight:600;letter-spacing:.05em">TOTAL SCORE</div>
       </div>
     </div>
@@ -818,7 +818,7 @@ function upd(compId,key,value,ji){
   if(comp){
     const r=calcTotal(comp);
     const tb=document.querySelector('.tbig');
-    if(tb)tb.textContent=r.dq?'DQ':r.total.toFixed(1);
+    if(tb)tb.textContent=r.dq?'DQ ('+r.total.toFixed(1)+')':r.total.toFixed(1);
   }
 }
 
@@ -985,7 +985,9 @@ function renderRankings(){
       const sS=cols4
         ?`<td class="mono" style="font-size:.82rem">${c.r.ss[0].toFixed(1)}</td><td class="mono" style="font-size:.82rem">${c.r.ss[1].toFixed(1)}</td><td class="mono" style="font-size:.82rem">${c.r.ss[2].toFixed(1)}</td><td class="mono" style="font-size:.82rem">${c.r.ss[3].toFixed(1)}</td>`
         :`<td class="mono" style="font-size:.82rem">${(c.r.ss[0]||0).toFixed(1)}</td><td class="mono" style="font-size:.82rem">${(c.r.ss[1]||0).toFixed(1)}</td>`;
-      return`<tr class="r${i+1}${c.r.dq?' row-dq':''}"><td class="rn">${i+1}</td><td><strong>${c.name}</strong>${i<topN?'<span class="rf">FINALIST</span>':''}</td><td style="color:var(--muted)">Team ${String(c.team).replace(/^Tým\s*/i,'')}</td><td class="mono">${c.r.tc.toFixed(1)}</td>${sS}<td class="mono" style="color:var(--danger)">${c.r.pen>0?'−'+c.r.pen:'0'}</td><td class="mono ${c.r.dq?'dq':''}">${c.r.dq?'DQ':c.r.total.toFixed(1)}</td></tr>`;
+      const compObj=competitors.find(x=>x.id===c.id);
+      const teamVal=compObj?.team||c.team||'?';
+      return`<tr class="r${i+1}${c.r.dq?' row-dq':''}"><td class="rn">${i+1}</td><td><strong>${c.name}</strong>${i<topN?'<span class="rf">FINALIST</span>':''}</td><td style="color:var(--muted)">Team ${String(teamVal).replace(/^Tým\s*/i,'')}</td><td class="mono">${c.r.tc.toFixed(1)}</td>${sS}<td class="mono" style="color:var(--danger)">${c.r.pen>0?'−'+c.r.pen:'0'}</td><td class="mono ${c.r.dq?'dq':''}">${c.r.dq?'DQ ('+c.r.total.toFixed(1)+')':c.r.total.toFixed(1)}</td></tr>`;
     }).join('');
     return`<div style="margin-bottom:2.5rem"><h2 style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--muted);letter-spacing:.08em;margin-bottom:1rem">${label}</h2><table class="rtbl"><thead>${hdr}</thead><tbody>${rows}</tbody></table></div>`;
   };
