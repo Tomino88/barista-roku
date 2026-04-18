@@ -394,23 +394,23 @@ function juniorSensoryScore(sj){
 function calcTotal(comp){
   if(comp.phase==='junior'){
     const sd=getScores(comp.id);
-    if(isDQ(sd.time))return{total:null,dq:true,tech:0,tc:0,ss:[0,0],st:0,pen:0};
+    const dq=isDQ(sd.time);
     const pen=timePen(sd.time);
     const tr=techScore(sd);
     const tc=tr.tot*juniorTechJudges.length;
     const ss=[0,1].map(j=>juniorSensoryJudges.includes(j)?juniorSensoryScore(sd.sensory[j]).tot:0);
     const st=ss.reduce((a,b)=>a+b,0);
-    return{total:tc+st-pen,dq:false,tech:tr.tot,tc,ss,st,pen};
+    return{total:tc+st-pen,dq,tech:tr.tot,tc,ss,st,pen};
   }
   const sd=getScores(comp.id),fin=comp.phase==='final';
-  if(isDQ(sd.time))return{total:null,dq:true,tech:0,tc:0,ss:[0,0,0,0],st:0,pen:0};
+  const dq=isDQ(sd.time);
   const pen=timePen(sd.time);
   const tr=techScore(sd);
   const activeIdx=fin?finalJudges:[0,1,2,3];
   const ss=[0,1,2,3].map(j=>activeIdx.includes(j)?sensoryScore(sd.sensory[j]).tot:0);
   const stot=ss.reduce((a,b)=>a+b,0);
   const tc=tr.tot*(fin?finalTechJudges.length:2);
-  return{total:tc+stot-pen,dq:false,tech:tr.tot,tc,ss,st:stot,pen};
+  return{total:tc+stot-pen,dq,tech:tr.tot,tc,ss,st:stot,pen};
 }
 
 function getScores(id){return scoresCache[id]||emptyScoreData();}
