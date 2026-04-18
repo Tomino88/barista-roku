@@ -599,7 +599,7 @@ function renderSidebar(){
     // Top 6 auto panel
     const semi=competitors.filter(c=>c.phase==='semi')
       .map(c=>({...c,r:calcTotal(c,'semi')})).filter(c=>!c.r.dq)
-      .sort((a,b)=>b.r.total-a.r.total).slice(0,6)
+      .sort((a,b)=>{const sd=(c)=>getScores(c.id,'semi');const ep=(c)=>[0,1,2,3].reduce((s,j)=>s+(sensoryScore(sd(c).sensory[j]||{}).p1||0),0);return b.r.total-a.r.total||ep(b)-ep(a)||(a.start_order??9999)-(b.start_order??9999);}).slice(0,6)
       .sort((a,b)=>{const ao=a.final_order!=null?a.final_order:9999,bo=b.final_order!=null?b.final_order:9999;return ao!==bo?ao-bo:b.r.total-a.r.total;});
     const medals=['🥇','🥈','🥉'],medalBg=['#FFF8E1','#F5F5F5','#FBE9E7'];
     top.innerHTML='';
@@ -970,10 +970,12 @@ let rankingView='senior';
 function setRankingView(v){rankingView=v;renderRankings();}
 function renderRankings(){
   const el=document.getElementById('rankingContent');
-  const sortComps=(comps,forcePhase)=>comps.map(c=>({...c,r:calcTotal(c,forcePhase)})).sort((a,b)=>{
+  const espSum=(c,forcePhase)=>{const p=forcePhase!==undefined?forcePhase:phase;const sd=getScores(c.id,c.phase==='junior'?'junior':p);const idx=c.phase==='junior'?juniorSensoryJudges:(p==='final'?finalJudges:[0,1,2,3]);return idx.reduce((s,j)=>s+(sensoryScore(sd.sensory[j]||{}).p1||0),0);};
+  const sortComps=(comps,forcePhase)=>comps.map(c=>({...c,r:calcTotal(c,forcePhase),esp:espSum(c,forcePhase)})).sort((a,b)=>{
     if(a.r.dq&&!b.r.dq)return 1;if(!a.r.dq&&b.r.dq)return-1;
     if(b.r.total!==a.r.total)return b.r.total-a.r.total;
-    const ao=a.final_order!=null?a.final_order:9999,bo=b.final_order!=null?b.final_order:9999;
+    if(b.esp!==a.esp)return b.esp-a.esp;
+    const ao=a.start_order!=null?a.start_order:9999,bo=b.start_order!=null?b.start_order:9999;
     return ao-bo;
   });
   const rr=(label,comps,forcePhase,topN,cols4)=>{
@@ -996,9 +998,10 @@ function renderRankings(){
     <button class="btn ${rankingView==='junior'?'btn-p':'btn-g'}" onclick="setRankingView('junior')">Junior</button>
     <button class="btn btn-g" onclick="exportCSV()" style="margin-left:auto">Export CSV</button>
   </div>`;
+  const semiEsp=c=>{const sd=getScores(c.id,'semi');return[0,1,2,3].reduce((s,j)=>s+(sensoryScore(sd.sensory[j]||{}).p1||0),0);};
   const top6=competitors.filter(c=>c.phase==='semi')
     .map(c=>({...c,r:calcTotal(c,'semi')})).filter(c=>!c.r.dq)
-    .sort((a,b)=>b.r.total-a.r.total).slice(0,6);
+    .sort((a,b)=>b.r.total-a.r.total||semiEsp(b)-semiEsp(a)||(a.start_order??9999)-(b.start_order??9999)).slice(0,6);
   if(rankingView==='junior'){
     el.innerHTML=toggle+rr('Barista Junior',competitors.filter(c=>c.phase==='junior'),undefined,0,false);
   }else{
@@ -1008,10 +1011,12 @@ function renderRankings(){
 
 // ── EXPORT CSV ───────────────────────────────────────────────
 function exportCSV(){
-  const sortComps=(comps,forcePhase)=>comps.map(c=>({...c,r:calcTotal(c,forcePhase)})).sort((a,b)=>{
+  const csvEspSum=(c,forcePhase)=>{const p=forcePhase!==undefined?forcePhase:phase;const sd=getScores(c.id,c.phase==='junior'?'junior':p);const idx=c.phase==='junior'?juniorSensoryJudges:(p==='final'?finalJudges:[0,1,2,3]);return idx.reduce((s,j)=>s+(sensoryScore(sd.sensory[j]||{}).p1||0),0);};
+  const sortComps=(comps,forcePhase)=>comps.map(c=>({...c,r:calcTotal(c,forcePhase),esp:csvEspSum(c,forcePhase)})).sort((a,b)=>{
     if(a.r.dq&&!b.r.dq)return 1;if(!a.r.dq&&b.r.dq)return-1;
     if(b.r.total!==a.r.total)return b.r.total-a.r.total;
-    const ao=a.final_order!=null?a.final_order:9999,bo=b.final_order!=null?b.final_order:9999;
+    if(b.esp!==a.esp)return b.esp-a.esp;
+    const ao=a.start_order!=null?a.start_order:9999,bo=b.start_order!=null?b.start_order:9999;
     return ao-bo;
   });
   const esc=v=>{const s=String(v==null?'':v);return(s.includes(';')||s.includes('"')||s.includes('\n'))?'"'+s.replace(/"/g,'""')+'"':s;};
@@ -1031,7 +1036,8 @@ function exportCSV(){
   lines.push('');
 
   // Final
-  const top6=competitors.filter(c=>c.phase==='semi').map(c=>({...c,r:calcTotal(c,'semi')})).filter(c=>!c.r.dq).sort((a,b)=>b.r.total-a.r.total).slice(0,6);
+  const csvSemiEsp=c=>{const sd=getScores(c.id,'semi');return[0,1,2,3].reduce((s,j)=>s+(sensoryScore(sd.sensory[j]||{}).p1||0),0);};
+  const top6=competitors.filter(c=>c.phase==='semi').map(c=>({...c,r:calcTotal(c,'semi')})).filter(c=>!c.r.dq).sort((a,b)=>b.r.total-a.r.total||csvSemiEsp(b)-csvSemiEsp(a)||(a.start_order??9999)-(b.start_order??9999)).slice(0,6);
   const finalSorted=sortComps(top6,'final');
   const MEDALS=['Gold','Silver','Bronze'];
   lines.push(row('FINAL'));
