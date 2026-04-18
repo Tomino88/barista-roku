@@ -14,7 +14,7 @@ Scorekeeping appka pro Czech Barista Championship 2026 (semi, final, junior).
 - Publishable key: sb_publishable_ekXbKIfiSWnRcw8dcjsNCg_pH1OO5qs
 - Tabulky:
   - competitors: id, name, email, team, tech_team, phase, category, start_order, final_order, created_at
-  - scores: competitor_id, data (JSON), updated_by, updated_at
+  - scores: competitor_id, phase ('semi'|'junior'|'final'), data (JSON), updated_by, updated_at — unique(competitor_id, phase)
   - scans: id, competitor_id, judge_label, file_path, file_name, uploaded_at, uploaded_by
     - judges: id, name, role ('sensory'|'technical'|'head'), team ('1'|'2'|'3' pro sensory semi; 'blue'|'purple' pro tech semi; '1'|'2' pro junior), phase ('semi'|'junior')
 - Storage bucket: scans (max 10MB, jpg/png/pdf)
@@ -188,7 +188,9 @@ INSERT INTO judges (name, role, team, phase) VALUES
 - Záložka Final: auto top-6 ze semi (klikatelní, scoresheet dostupný), judges checkboxy T1/T2/S1–S4, medaile top 3 (🥇🥈🥉), pořadí dle final_order nebo skóre
 - Záložka Junior: 5 soutěžících, scoring max 318 (tech/71 × 2 + sensory/88 × 2), judges checkboxy T1/T2/S1/S2
 - Scoring: ×násobek kalkulace vždy viditelná (i pro prázdná pole "0 × 4 = 0"), time penalty, DQ
+- DQ: skóre se počítá i při DQ, soutěžící označen červeně a posunut na konec rankingu (víc DQ = seřazeni dle skóre)
 - Total Impression: ×2 (CBC 2026, max /12 per judge)
+- Final scores odděleny od semi: scores tabulka má phase sloupec ('semi'/'junior'/'final'), finalisté začínají od nuly
 - Head Judge: input v scoresheet (localStorage), HJ Summary panel (T1+T2+S1–S4 nebo T1+T2+S1+S2 pro junior)
 - Reset score: tlačítko v hlavičce scoresheet (s confirm dialogem)
 - Scans: upload (jpg/png/pdf), download, delete; Send to competitor (Resend email, signed URL 7 dní)
@@ -227,6 +229,10 @@ INSERT INTO judges (name, role, team, phase) VALUES
 - [x] Sidebar + scoresheet používají sensorTeam() pro judge lookup i display (2026-04-17)
 - [x] Final scoresheet: anonymní judži S1–S4/T1–T2 (DB judges pro finále TBD); HJ jako volný input (2026-04-17)
 - [x] Semi sensory pořadí S1–S4 hardcodováno v JS (SEMI_SENSORY_ORDER) — T1:Eliška/Tereza/Tiaran/Valeria, T2:Dominik/Elizaveta/Aiste/Tomo Pavlov, T3:Nikola/Kamila/Joanna/Alesya (2026-04-17)
+- [x] DQ: score se počítá i při DQ, řádek červeně v Results, DQ na konec (seřazeni dle skóre) (2026-04-18)
+- [x] scores tabulka: přidán phase sloupec + unique(competitor_id,phase) — final scores odděleny od semi (2026-04-18)
+- [x] finalScoresCache v JS — Final záložka čte/zapisuje phase='final', finalisté začínají od nuly (2026-04-18)
+- [x] Results Final tabulka: zobrazuje final scores top-6 semifinalistů (ne semi scores) (2026-04-18)
 
 ## Jak nasadit změny
 Jakákoliv změna v index.html → commit → push → Vercel auto-deploy.
