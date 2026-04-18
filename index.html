@@ -150,6 +150,7 @@ table.rtbl tr:hover td{background:var(--accent-light);}
 .rf{display:inline-block;background:var(--accent);color:#fff;font-size:.62rem;font-weight:700;letter-spacing:.08em;padding:2px 6px;border-radius:4px;margin-left:5px;}
 .mono{font-family:'DM Mono',monospace;color:var(--accent);font-size:.95rem;font-weight:600;}
 .mono.dq{color:var(--danger);}
+tr.row-dq{background:rgba(220,53,69,.08);}
 
 /* MODAL */
 .mo{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:200;}
@@ -970,7 +971,7 @@ function renderRankings(){
       const sS=cols4
         ?`<td class="mono" style="font-size:.82rem">${c.r.ss[0].toFixed(1)}</td><td class="mono" style="font-size:.82rem">${c.r.ss[1].toFixed(1)}</td><td class="mono" style="font-size:.82rem">${c.r.ss[2].toFixed(1)}</td><td class="mono" style="font-size:.82rem">${c.r.ss[3].toFixed(1)}</td>`
         :`<td class="mono" style="font-size:.82rem">${(c.r.ss[0]||0).toFixed(1)}</td><td class="mono" style="font-size:.82rem">${(c.r.ss[1]||0).toFixed(1)}</td>`;
-      return`<tr class="r${i+1}"><td class="rn">${i+1}</td><td><strong>${c.name}</strong>${i<topN?'<span class="rf">FINALIST</span>':''}</td><td style="color:var(--muted)">Team ${String(c.team).replace(/^Tým\s*/i,'')}</td><td class="mono">${c.r.tc.toFixed(1)}</td>${sS}<td class="mono" style="color:var(--danger)">${c.r.pen>0?'−'+c.r.pen:'0'}</td><td class="mono ${c.r.dq?'dq':''}">${c.r.dq?'DQ':c.r.total.toFixed(1)}</td></tr>`;
+      return`<tr class="r${i+1}${c.r.dq?' row-dq':''}"><td class="rn">${i+1}</td><td><strong>${c.name}</strong>${i<topN?'<span class="rf">FINALIST</span>':''}</td><td style="color:var(--muted)">Team ${String(c.team).replace(/^Tým\s*/i,'')}</td><td class="mono">${c.r.tc.toFixed(1)}</td>${sS}<td class="mono" style="color:var(--danger)">${c.r.pen>0?'−'+c.r.pen:'0'}</td><td class="mono ${c.r.dq?'dq':''}">${c.r.dq?'DQ':c.r.total.toFixed(1)}</td></tr>`;
     }).join('');
     return`<div style="margin-bottom:2.5rem"><h2 style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--muted);letter-spacing:.08em;margin-bottom:1rem">${label}</h2><table class="rtbl"><thead>${hdr}</thead><tbody>${rows}</tbody></table></div>`;
   };
