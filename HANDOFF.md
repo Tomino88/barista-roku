@@ -249,6 +249,7 @@ INSERT INTO judges (name, role, team, phase) VALUES
 - [x] Tiebreak stejného skóre: sensory espresso sum (S1–S4 p1), pak start_order (2026-04-19)
 - [x] Results Final tabulka: medaile 🥇🥈🥉 + zbarvení řádků top 3 (#FFF8E1/#F5F5F5/#FBE9E7) (2026-04-19)
 - [x] Final scoresheet: jména judžů z judgesCache.final (fáze='final' v DB); fallback S1–S4/T1–T2 pokud DB prázdné (2026-04-19)
+- [x] Junior scoresheet: opraveno zobrazení Sensory sekcí — nahrazeny nested template literals za string concatenation, jun ternary nyní spolehlivě selektuje 3 junior sekce (I Espresso/49, II Milk/33, III Barista Eval/6) vs 5 senior sekcí (2026-04-19)
 
 ## Jak nasadit změny
 Jakákoliv změna v index.html → commit → push → Vercel auto-deploy.
