@@ -208,7 +208,7 @@ INSERT INTO judges (name, role, team, phase) VALUES
 - Results záložka: Senior/Junior přepínač, ranking semi + final + junior, top-6 označeni FINALIST, medaile 🥇🥈🥉 + zbarvení řádků pro top 3 finalistů
 - Export CSV: tlačítko v Results — semi + final + junior, medaile/DQ sloupce, UTF-8 BOM
 - Public API /api/results: semi + final + junior JSON, Bearer token auth, CORS *
-- Judges tabulka: jména judžů načtena z DB, zobrazena dynamicky v scoresheet (sensory dle comp.team, tech dle comp.tech_team)
+- Judges tabulka: jména judžů načtena z DB, zobrazena dynamicky v scoresheet (sensory dle comp.team, tech dle comp.tech_team); Final scoresheet zobrazuje jména z judgesCache.final (phase='final' v DB), fallback S1–S4/T1–T2
 - Toast notifikace, manual Save tlačítko
 
 ## Hotovo (chronologicky)
@@ -237,7 +237,7 @@ INSERT INTO judges (name, role, team, phase) VALUES
 - [x] judgesCache přestavěna na indexovaný objekt {phase→role→team→[names]} — O(1) lookup (2026-04-17)
 - [x] sensorTeam() derivuje tým ze start_order ((start_order-1)%3+1) — nezávislé na DB (2026-04-17)
 - [x] Sidebar + scoresheet používají sensorTeam() pro judge lookup i display (2026-04-17)
-- [x] Final scoresheet: anonymní judži S1–S4/T1–T2 (DB judges pro finále TBD); HJ jako volný input (2026-04-17)
+- [x] Final scoresheet: anonymní judži S1–S4/T1–T2, HJ jako volný input (2026-04-17) → nahrazeno judgesCache.final (2026-04-19)
 - [x] Semi sensory pořadí S1–S4 hardcodováno v JS (SEMI_SENSORY_ORDER) — T1:Eliška/Tereza/Tiaran/Valeria, T2:Dominik/Elizaveta/Aiste/Tomo Pavlov, T3:Nikola/Kamila/Joanna/Alesya (2026-04-17)
 - [x] DQ: score se počítá i při DQ, řádek červeně v Results, DQ na konec (seřazeni dle skóre) (2026-04-18)
 - [x] scores tabulka: přidán phase sloupec + unique(competitor_id,phase) — final scores odděleny od semi (2026-04-18)
