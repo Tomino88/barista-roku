@@ -997,7 +997,7 @@ function renderRankings(){
       const teamVal=compObj?.team||c.team||'?';
       const medal=medals&&!c.r.dq&&i<3?' '+MEDAL_EMOJI[i]:'';
       const trStyle=medals&&!c.r.dq&&i<3?' style="background:'+MEDAL_BG[i]+'"':'';
-      return'<tr class="r'+(i+1)+(c.r.dq?' row-dq':'')+'"'+trStyle+'><td class="rn">'+(i+1)+'</td><td><strong>'+c.name+'</strong>'+medal+'</td><td style="color:var(--muted)">Team '+String(teamVal).replace(/^Tým\s*/i,'')+'</td><td class="mono">'+c.r.tc.toFixed(1)+'</td>'+sS+'<td class="mono" style="color:var(--danger)">'+(c.r.pen>0?'−'+c.r.pen:'0')+'</td><td class="mono '+(c.r.dq?'dq':'')+'">'+(c.r.dq?'DQ ('+c.r.total.toFixed(1)+')':c.r.total.toFixed(1))+'</td></tr>';
+      return'<tr class="r'+(i+1)+(c.r.dq?' row-dq':'')+'"'+trStyle+'><td class="rn">'+(i+1)+'</td><td><strong>'+c.name+'</strong>'+medal+'</td><td style="color:var(--muted)">'+(medals?'Final Team':'Team '+String(teamVal).replace(/^Tým\s*/i,''))+'</td><td class="mono">'+c.r.tc.toFixed(1)+'</td>'+sS+'<td class="mono" style="color:var(--danger)">'+(c.r.pen>0?'−'+c.r.pen:'0')+'</td><td class="mono '+(c.r.dq?'dq':'')+'">'+(c.r.dq?'DQ ('+c.r.total.toFixed(1)+')':c.r.total.toFixed(1))+'</td></tr>';
     }).join('');
     return`<div style="margin-bottom:2.5rem"><h2 style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--muted);letter-spacing:.08em;margin-bottom:1rem">${label}</h2><table class="rtbl"><thead>${hdr}</thead><tbody>${rows}</tbody></table></div>`;
   };
