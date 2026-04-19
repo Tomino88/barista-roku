@@ -76,7 +76,7 @@ export default async function handler(req) {
 
   const [compsRes, scoresRes] = await Promise.all([
     fetch(`${SUPA_URL}/rest/v1/competitors?select=id,name,phase,start_order,final_order`, { headers }),
-    fetch(`${SUPA_URL}/rest/v1/scores?select=competitor_id,data`, { headers }),
+    fetch(`${SUPA_URL}/rest/v1/scores?select=competitor_id,phase,data`, { headers }),
   ]);
 
   if (!compsRes.ok || !scoresRes.ok) {
@@ -86,15 +86,19 @@ export default async function handler(req) {
   const competitors = await compsRes.json();
   const scoresRaw = await scoresRes.json();
 
-  const scoresMap = {};
-  for (const row of scoresRaw) scoresMap[row.competitor_id] = row.data;
+  // Phase-aware maps: scoresByPhase[phase][competitor_id] = data
+  const scoresByPhase = {};
+  for (const row of scoresRaw) {
+    if (!scoresByPhase[row.phase]) scoresByPhase[row.phase] = {};
+    scoresByPhase[row.phase][row.competitor_id] = row.data;
+  }
 
-  const score = c => calcScore(scoresMap[c.id]);
+  const score = (c, p) => calcScore((scoresByPhase[p] || {})[c.id]);
 
   // Semi — sort by score desc, fallback to start_order asc
   const semi = competitors
     .filter(c => c.phase === 'semi')
-    .map(c => ({ ...c, s: score(c) }))
+    .map(c => ({ ...c, s: score(c, 'semi') }))
     .sort((a, b) => {
       if (a.s.dq && !b.s.dq) return 1;
       if (!a.s.dq && b.s.dq) return -1;
@@ -105,11 +109,11 @@ export default async function handler(req) {
     })
     .map((c, i) => ({ rank: i + 1, name: c.name, score: c.s.dq ? null : +(c.s.total || 0).toFixed(1), dq: c.s.dq || undefined, phase: 'semi' }));
 
-  // Final — sort by final_order, fallback to score
+  // Final — finalists are semi competitors with final_order set; scores stored as phase='final'
   const medals = ['gold', 'silver', 'bronze'];
   const final = competitors
-    .filter(c => c.phase === 'final')
-    .map(c => ({ ...c, s: score(c) }))
+    .filter(c => c.phase === 'semi' && c.final_order != null)
+    .map(c => ({ ...c, s: score(c, 'final') }))
     .sort((a, b) => {
       const ao = a.final_order != null ? a.final_order : 9999;
       const bo = b.final_order != null ? b.final_order : 9999;
@@ -128,7 +132,7 @@ export default async function handler(req) {
   // Junior — sort by score desc, fallback to start_order
   const junior = competitors
     .filter(c => c.phase === 'junior')
-    .map(c => ({ ...c, s: score(c) }))
+    .map(c => ({ ...c, s: score(c, 'junior') }))
     .sort((a, b) => {
       if (a.s.dq && !b.s.dq) return 1;
       if (!a.s.dq && b.s.dq) return -1;
