@@ -1,7 +1,7 @@
 export const config = { runtime: 'edge' };
 
 const SUPA_URL = 'https://cggujadkrrrbeuuxitmm.supabase.co';
-const CORS = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' };
+const CORS = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json', 'Cache-Control': 'no-store, no-cache' };
 
 // ── Scoring (mirrors index.html logic) ───────────────────────
 const fv0 = v => {
@@ -115,9 +115,8 @@ export default async function handler(req) {
     .filter(c => c.phase === 'semi' && c.final_order != null)
     .map(c => ({ ...c, s: score(c, 'final') }))
     .sort((a, b) => {
-      const ao = a.final_order != null ? a.final_order : 9999;
-      const bo = b.final_order != null ? b.final_order : 9999;
-      if (ao !== bo) return ao - bo;
+      if (a.s.dq && !b.s.dq) return 1;
+      if (!a.s.dq && b.s.dq) return -1;
       return (b.s.total || 0) - (a.s.total || 0);
     })
     .map((c, i) => ({
