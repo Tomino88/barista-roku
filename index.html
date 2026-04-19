@@ -426,11 +426,13 @@ const normTeam=t=>String(t||'').replace(/^Tým\s*/i,'');
 const sensorTeam=c=>(c.phase==='junior'||c.start_order==null)?normTeam(c.team):String(((c.start_order-1)%3)+1);
 const SEMI_SENSORY_ORDER={'1':['Eliška','Tereza','Tiaran','Valeria'],'2':['Dominik','Elizaveta','Aiste','Tomo Pavlov'],'3':['Nikola','Kamila','Joanna','Alesya']};
 function getSensoryJudgeNames(team,ph){
+  if(ph==='final'){const s=judgesCache?.final?.sensory||{};return Object.keys(s).sort().flatMap(k=>s[k]);}
   if(ph==='junior'){const s=judgesCache?.junior?.sensory||{};return Object.keys(s).sort().flatMap(k=>s[k]);}
   const tm=normTeam(team);
   return SEMI_SENSORY_ORDER[tm]||(judgesCache?.semi?.sensory?.[tm]||[]);
 }
 function getTechJudgeNames(tech_team,ph){
+  if(ph==='final'){const t=judgesCache?.final?.technical||{};const s=Object.keys(t).sort().flatMap(k=>t[k]);return[s[0]||'T1',s[1]||'T2'];}
   if(ph==='junior'){const t=judgesCache?.junior?.technical||{};const s=Object.keys(t).sort().flatMap(k=>t[k]);return[s[0]||'T1',s[1]||'T2'];}
   const n=judgesCache?.semi?.technical?.[tech_team||'blue']||[];return[n[0]||'T1',n[1]||'T2'];
 }
@@ -492,6 +494,7 @@ async function loadAll(){
         judgesCache[ph][rl][tm].sort((a,b)=>a.order-b.order);
         judgesCache[ph][rl][tm]=judgesCache[ph][rl][tm].map(x=>x.name);
       }
+  if(!judgesCache.final)judgesCache.final={};
 }
 
 async function saveScores(compId){
@@ -704,10 +707,10 @@ function renderScoresheet(){
   const dqH=dq?`<span class="dq-badge">DISQUALIFIED</span>`:'';
   const activeJudgeIndices=fin?finalJudges:jun?juniorSensoryJudges:[0,1,2,3];
   const compSensorTeam=sensorTeam(comp);
-  const sJudgeNames=fin?[]:getSensoryJudgeNames(compSensorTeam,phase);
+  const sJudgeNames=fin?getSensoryJudgeNames(null,'final'):getSensoryJudgeNames(compSensorTeam,phase);
   const effectiveTechTeam=(!jun&&comp.start_order!=null)?(comp.start_order%2===1?'purple':'blue'):(comp.tech_team||'blue');
-  const tJudgeNames=fin?['T1','T2']:getTechJudgeNames(effectiveTechTeam,phase);
-  const JL=activeJudgeIndices.map(i=>fin?`S${i+1}`:(sJudgeNames[i]||'S'+(i+1)));
+  const tJudgeNames=fin?getTechJudgeNames(null,'final'):getTechJudgeNames(effectiveTechTeam,phase);
+  const JL=activeJudgeIndices.map(i=>sJudgeNames[i]||'S'+(i+1));
 
   const nc=(lbl,key,mn,mx,mult,ji,ml2)=>{
     const v=ji!==null?sd.sensory[ji][key]:sd[key];
@@ -978,7 +981,9 @@ function renderRankings(){
     const ao=a.start_order!=null?a.start_order:9999,bo=b.start_order!=null?b.start_order:9999;
     return ao-bo;
   });
-  const rr=(label,comps,forcePhase,topN,cols4)=>{
+  const MEDAL_EMOJI=['🥇','🥈','🥉'];
+  const MEDAL_BG=['#FFF8E1','#F5F5F5','#FBE9E7'];
+  const rr=(label,comps,forcePhase,topN,cols4,medals=false)=>{
     const sorted=sortComps(comps,forcePhase);
     const hdr=cols4
       ?`<tr><th>#</th><th>Name</th><th>Team</th><th>Tech T1+T2</th><th>S1</th><th>S2</th><th>S3</th><th>S4</th><th>Penalty</th><th>Total</th></tr>`
@@ -989,7 +994,9 @@ function renderRankings(){
         :`<td class="mono" style="font-size:.82rem">${(c.r.ss[0]||0).toFixed(1)}</td><td class="mono" style="font-size:.82rem">${(c.r.ss[1]||0).toFixed(1)}</td>`;
       const compObj=competitors.find(x=>x.id===c.id);
       const teamVal=compObj?.team||c.team||'?';
-      return`<tr class="r${i+1}${c.r.dq?' row-dq':''}"><td class="rn">${i+1}</td><td><strong>${c.name}</strong>${i<topN?'<span class="rf">FINALIST</span>':''}</td><td style="color:var(--muted)">Team ${String(teamVal).replace(/^Tým\s*/i,'')}</td><td class="mono">${c.r.tc.toFixed(1)}</td>${sS}<td class="mono" style="color:var(--danger)">${c.r.pen>0?'−'+c.r.pen:'0'}</td><td class="mono ${c.r.dq?'dq':''}">${c.r.dq?'DQ ('+c.r.total.toFixed(1)+')':c.r.total.toFixed(1)}</td></tr>`;
+      const medal=medals&&!c.r.dq&&i<3?' '+MEDAL_EMOJI[i]:'';
+      const trStyle=medals&&!c.r.dq&&i<3?' style="background:'+MEDAL_BG[i]+'"':'';
+      return'<tr class="r'+(i+1)+(c.r.dq?' row-dq':'')+'"'+trStyle+'><td class="rn">'+(i+1)+'</td><td><strong>'+c.name+'</strong>'+medal+(i<topN?'<span class="rf">FINALIST</span>':'')+'</td><td style="color:var(--muted)">Team '+String(teamVal).replace(/^Tým\s*/i,'')+'</td><td class="mono">'+c.r.tc.toFixed(1)+'</td>'+sS+'<td class="mono" style="color:var(--danger)">'+(c.r.pen>0?'−'+c.r.pen:'0')+'</td><td class="mono '+(c.r.dq?'dq':'')+'">'+(c.r.dq?'DQ ('+c.r.total.toFixed(1)+')':c.r.total.toFixed(1))+'</td></tr>';
     }).join('');
     return`<div style="margin-bottom:2.5rem"><h2 style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--muted);letter-spacing:.08em;margin-bottom:1rem">${label}</h2><table class="rtbl"><thead>${hdr}</thead><tbody>${rows}</tbody></table></div>`;
   };
@@ -1005,7 +1012,7 @@ function renderRankings(){
   if(rankingView==='junior'){
     el.innerHTML=toggle+rr('Barista Junior',competitors.filter(c=>c.phase==='junior'),undefined,0,false);
   }else{
-    el.innerHTML=toggle+rr('Semi-Final',competitors.filter(c=>c.phase==='semi'),undefined,6,true)+rr('Final',top6,'final',1,true);
+    el.innerHTML=toggle+rr('Semi-Final',competitors.filter(c=>c.phase==='semi'),undefined,6,true)+rr('Final',top6,'final',1,true,true);
   }
 }
 

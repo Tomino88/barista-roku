@@ -133,7 +133,16 @@ INSERT INTO judges (name, role, team, phase) VALUES
 -- 3. Přidat tech_team do competitors
 ALTER TABLE competitors ADD COLUMN IF NOT EXISTS tech_team text DEFAULT 'blue';
 
--- 4. Junior judges
+-- 4. Final judges (upravit jména dle skutečných judžů finále)
+INSERT INTO judges (name, role, team, phase) VALUES
+('S1 jméno', 'sensory', '1', 'final'),
+('S2 jméno', 'sensory', '2', 'final'),
+('S3 jméno', 'sensory', '3', 'final'),
+('S4 jméno', 'sensory', '4', 'final'),
+('T1 jméno', 'technical', '1', 'final'),
+('T2 jméno', 'technical', '2', 'final');
+
+-- 5. Junior judges
 INSERT INTO judges (name, role, team, phase) VALUES
 ('Tereza',   'head',      null, 'junior'),
 ('Kamila',   'sensory',   '1',  'junior'),
@@ -196,7 +205,8 @@ INSERT INTO judges (name, role, team, phase) VALUES
 - Scans: upload (jpg/png/pdf), download, delete; Send to competitor (Resend email, signed URL 7 dní)
 - Edit Competitor modal: jméno, email, tým
 - Pamatování pozice: přepnutí záložek obnoví posledního vybraného soutěžícího
-- Results záložka: Senior/Junior přepínač, ranking semi + final + junior, top-6 označeni FINALIST
+- Results záložka: Senior/Junior přepínač, ranking semi + final + junior, top-6 označeni FINALIST, medaile 🥇🥈🥉 + zbarvení řádků pro top 3 finalistů
+- Export CSV: tlačítko v Results — semi + final + junior, medaile/DQ sloupce, UTF-8 BOM
 - Public API /api/results: semi + final + junior JSON, Bearer token auth, CORS *
 - Judges tabulka: jména judžů načtena z DB, zobrazena dynamicky v scoresheet (sensory dle comp.team, tech dle comp.tech_team)
 - Toast notifikace, manual Save tlačítko
@@ -233,6 +243,12 @@ INSERT INTO judges (name, role, team, phase) VALUES
 - [x] scores tabulka: přidán phase sloupec + unique(competitor_id,phase) — final scores odděleny od semi (2026-04-18)
 - [x] finalScoresCache v JS — Final záložka čte/zapisuje phase='final', finalisté začínají od nuly (2026-04-18)
 - [x] Results Final tabulka: zobrazuje final scores top-6 semifinalistů (ne semi scores) (2026-04-18)
+- [x] Results Final ranking: správné řazení top-6 dle final scores (ne semi) (2026-04-18)
+- [x] DQ skóre zobrazeno v závorce v Results tabulce; oprava Team lookup (2026-04-18)
+- [x] Export CSV tlačítko v Results záložce — semi + final + junior do jednoho souboru (2026-04-18)
+- [x] Tiebreak stejného skóre: sensory espresso sum (S1–S4 p1), pak start_order (2026-04-19)
+- [x] Results Final tabulka: medaile 🥇🥈🥉 + zbarvení řádků top 3 (#FFF8E1/#F5F5F5/#FBE9E7) (2026-04-19)
+- [x] Final scoresheet: jména judžů z judgesCache.final (fáze='final' v DB); fallback S1–S4/T1–T2 pokud DB prázdné (2026-04-19)
 
 ## Jak nasadit změny
 Jakákoliv změna v index.html → commit → push → Vercel auto-deploy.
