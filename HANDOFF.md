@@ -250,6 +250,12 @@ INSERT INTO judges (name, role, team, phase) VALUES
 - [x] Results Final tabulka: medaile 🥇🥈🥉 + zbarvení řádků top 3 (#FFF8E1/#F5F5F5/#FBE9E7) (2026-04-19)
 - [x] Final scoresheet: jména judžů z judgesCache.final (fáze='final' v DB); fallback S1–S4/T1–T2 pokud DB prázdné (2026-04-19)
 - [x] Junior scoresheet: opraveno zobrazení Sensory sekcí — nahrazeny nested template literals za string concatenation, jun ternary nyní spolehlivě selektuje 3 junior sekce (I Espresso/49, II Milk/33, III Barista Eval/6) vs 5 senior sekcí (2026-04-19)
+- [x] Junior scoresheet: TECH sekce opraveny — TECH IV (Signature Beverage) skryta pro junior (`${jun?'':TS(...)}`), Station Management relabelována jako TECH IV pro junior / TECH V pro senior (2026-04-20)
+- [x] Results Final tabulka: odstraněn FINALIST badge (ve finále jsou všichni finalisté) (2026-04-20)
+- [x] Results Final tabulka: sloupec Team zobrazuje "Final Team" místo "Team 1/2/3" (2026-04-20)
+- [x] /api/results: opraven phase-aware score lookup — scoresByPhase[phase][competitor_id], final filtruje semi comps s final_order != null a čte phase='final' scores (2026-04-20)
+- [x] /api/results: final sort opraven na score DESC (bylo final_order asc) (2026-04-20)
+- [x] /api/results: Cache-Control: no-store, no-cache přidán do všech responses (2026-04-20)
 
 ## Jak nasadit změny
 Jakákoliv změna v index.html → commit → push → Vercel auto-deploy.
