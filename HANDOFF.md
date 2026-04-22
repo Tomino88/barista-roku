@@ -191,6 +191,24 @@ INSERT INTO judges (name, role, team, phase) VALUES
 
 - [ ] Finalisté: záložka Final auto-zobrazí top 6 ze semi (klikatelní). Přiřadit start order 1–6 přes input v sidebaru.
 
+## Role systém (admin/viewer)
+- Role uložena v `auth.users.raw_user_meta_data->>'role'` = `'admin'`
+- Čtení v JS: `user.user_metadata.role` → globální `isAdmin`
+- **Admin**: plný přístup — editace skóre, přidání/editace/smazání soutěžícího, upload/delete scanů
+- **Viewer**: read-only — vidí vše, všechny vstupy disabled/skryty
+- Badge v hlavičce zobrazuje `email · admin` nebo jen `email`
+- RLS politiky: viz `supabase/rls_admin_policies.sql` (spustit ručně v SQL Editoru)
+
+### Jak nastavit admina v Supabase
+**Dashboard**: Authentication → Users → Edit → Custom Claims → `{ "role": "admin" }`
+
+**SQL**:
+```sql
+UPDATE auth.users
+SET raw_user_meta_data = raw_user_meta_data || '{"role":"admin"}'::jsonb
+WHERE email = 'user@example.com';
+```
+
 ## Features (implementováno)
 - Přihlášení přes Supabase Auth (email + heslo)
 - Záložka Semi: 17 soutěžících seřazeno dle start_order, scoring max 806
@@ -256,6 +274,7 @@ INSERT INTO judges (name, role, team, phase) VALUES
 - [x] /api/results: opraven phase-aware score lookup — scoresByPhase[phase][competitor_id], final filtruje semi comps s final_order != null a čte phase='final' scores (2026-04-20)
 - [x] /api/results: final sort opraven na score DESC (bylo final_order asc) (2026-04-20)
 - [x] /api/results: Cache-Control: no-store, no-cache přidán do všech responses (2026-04-20)
+- [x] Role systém admin/viewer: isAdmin z user_metadata, RLS politiky na všech tabulkách, UI skryje editaci pro viewery (2026-04-22)
 
 ## Jak nasadit změny
 Jakákoliv změna v index.html → commit → push → Vercel auto-deploy.
