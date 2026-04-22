@@ -451,7 +451,7 @@ async function doLogin(){
   if(error){errEl.textContent='Incorrect email or password.';errEl.classList.remove('hidden');return;}
   await initApp(data.user);
 }
-async function doLogout(){await sb.auth.signOut();document.getElementById('appView').style.display='none';document.getElementById('loginView').style.display='flex';}
+async function doLogout(){await sb.auth.signOut();document.getElementById('loginEmail').value='';document.getElementById('loginPass').value='';document.getElementById('appView').style.display='none';document.getElementById('loginView').style.display='flex';}
 
 async function initApp(user){
   currentUser=user;
