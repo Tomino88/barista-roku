@@ -275,6 +275,7 @@ WHERE email = 'user@example.com';
 - [x] /api/results: final sort opraven na score DESC (bylo final_order asc) (2026-04-20)
 - [x] /api/results: Cache-Control: no-store, no-cache přidán do všech responses (2026-04-20)
 - [x] Role systém admin/viewer: isAdmin z user_metadata, RLS politiky na všech tabulkách, UI skryje editaci pro viewery (2026-04-22)
+- [x] Login formulář vyčištěn po odhlášení (email + heslo) (2026-04-22)
 
 ## Jak nasadit změny
 Jakákoliv změna v index.html → commit → push → Vercel auto-deploy.
